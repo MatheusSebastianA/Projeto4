@@ -1,0 +1,28 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include "libDiretorio.h"
+
+int main(int argc, char *argv[]){
+    int opt;
+    while ((opt = getopt(argc, argv, "iam:xrch")) != -1) {
+        switch (opt) {
+            case 'i':
+                break;
+            case 'a':
+                break;
+            case 'm':
+                break;
+            case 'x':
+                break;
+            case 'r':
+                break;
+            case 'c':
+                break;
+            case 'h':
+        default:
+            fprintf(stderr, "Forma de uso: ./rle [-e | -d] -i <arq_in> -o <arq_out>\n");
+            exit(1);
+    }		
+
+    return 0;
+}
