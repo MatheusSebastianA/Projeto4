@@ -1,11 +1,16 @@
-#include <stdlib.h>
+#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <getopt.h>
 #include "libDiretorio.h"
 
+
 int main(int argc, char *argv[]){
+    struct diretorio *d;
     int opt;
     while ((opt = getopt(argc, argv, "iam:xrch")) != -1) {
-        switch (opt) {
+        switch (opt){
             case 'i':
                 break;
             case 'a':
@@ -19,10 +24,20 @@ int main(int argc, char *argv[]){
             case 'c':
                 break;
             case 'h':
-        default:
-            fprintf(stderr, "Forma de uso: ./rle [-e | -d] -i <arq_in> -o <arq_out>\n");
-            exit(1);
-    }		
+                break;
+            default:
+                printf ("O argumento passado não é válido\n");
+	            return (1);
+        }		
+    }
+
+    d = cria_diretorio();
+    insere(d, "teste.txt", insereI);
+    insere(d, "teste2.txt", insereI);
+    insere(d, "teste3.txt", insereI);
+    insere_apos_target(d, "teste4.txt", "teste2.txt");
+    imprime_diretorio(d);
+
 
     return 0;
 }
