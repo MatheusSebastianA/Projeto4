@@ -36,10 +36,13 @@ struct archive* insere_conteudo(struct archive *arc, char *nomeArq){
         if(!(arc->inicioArc = malloc(sizeof(struct blocoConteudo))))
             return NULL;
 
-        struct blocoConteudo *aux = arc->inicioArc->buffer;
+        struct blocoConteudo *aux;
+        aux = arc->inicioArc;
         while(!feof(arq)){
             fread(aux, sizeof(char), 1024, arq);
             aux = aux->prox;
+            if(!(aux = malloc(sizeof(struct blocoConteudo))))
+                return NULL;
             aux->prox = NULL;
             arc->pDiretorio++;
         }
@@ -51,14 +54,11 @@ struct archive* insere_conteudo(struct archive *arc, char *nomeArq){
 
 void imprime_conteudo(struct archive *arc, char *nomeArq){
     FILE *arq;
-    arq = fopen(nomeArq, "r");
+    arq = fopen(nomeArq, "w");
     struct blocoConteudo *aux;
     aux = arc->inicioArc;
 
-
-    while(aux != NULL){
-        fwrite(aux->buffer, sizeof(char), 1024, arq);
-    }
+    fwrite(aux->buffer, sizeof(char), 1024, arq);
 
     return;
 }
