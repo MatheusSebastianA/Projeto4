@@ -1,5 +1,5 @@
-#ifndef libArquivo
-#define libArquivo
+#ifndef libArchive
+#define libArchive
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,10 +15,19 @@ struct blocoConteudo{
 };
 
 struct archive{
-    int *pDiretorio;
+    int pDiretorio;
     struct blocoConteudo *inicioArc;
-    struct diretorio dir;
+    struct diretorio *dir;
 };
 
+int archive_vazio(struct archive *arc);
 
-#endif /* libArquivo.h*/
+struct archive* cria_archive();
+
+struct archive*  insere_conteudo(struct archive *arc, char *nomeArq);
+
+void imprime_conteudo(struct archive *arc, char *nomeArq);
+
+
+
+#endif /* libArchive.h*/
