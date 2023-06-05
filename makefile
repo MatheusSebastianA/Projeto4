@@ -3,12 +3,15 @@ CFLAGS = -Wall -std=c99  # flags de compilacao
 CC = gcc
 
 # arquivos-objeto
-	objects = vina++.o libDiretorio.o
+	objects = vina++.o libArchive.o libDiretorio.o 
 
 all: vina++
      
-vina++: vina++.o libDiretorio.o
-	$(CC) -o vina++ vina++.o libDiretorio.o
+vina++: vina++.o libDiretorio.o libArchive.o
+	$(CC) -o vina++ vina++.o libArchive.o libDiretorio.o
+
+libArchive.o: libArchive.c
+	$(CC) -c $(CFLAGS) libArchive.c
 
 libDiretorio.o: libDiretorio.c
 	$(CC) -c $(CFLAGS) libDiretorio.c
