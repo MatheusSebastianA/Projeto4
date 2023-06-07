@@ -100,7 +100,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         d->inicio = conteudo(d->inicio, nomeArq);
         d->inicio->ordem = 0;
         d->inicio->localizacao = sizeof(long int);
-        d->inicio_diretorio = d->inicio->tamanho + sizeof(long int);
+        d->inicio_diretorio = d->inicio->tamanho + sizeof(long int) - 1;
         d->fim = d->inicio;
         printf("novo começo dir é: %ld\n", d->inicio_diretorio);
 
@@ -121,7 +121,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     aux->prox = conteudo(aux->prox, nomeArq);
     aux->prox->ordem = aux->ordem + 1;
     aux->prox->localizacao = d->inicio_diretorio;
-    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho;
+    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho - 1  ;
     
     d->fim = aux->prox;
 
