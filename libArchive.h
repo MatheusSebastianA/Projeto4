@@ -13,6 +13,8 @@ FILE* abre_archive_escrita(char *nomeArq);
 
 FILE* abre_archive_leitura(char *nomeArq);
 
+void insere_diretorio(struct diretorio *d, char *nomeArc);
+
 int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive);
 
 int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive);
