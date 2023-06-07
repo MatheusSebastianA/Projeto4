@@ -37,7 +37,7 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
 
     if(!arc)
         return;
-    fseek(arc, d->inicio_diretorio - (d->fim->ordem + 1), SEEK_SET);
+    fseek(arc, d->inicio_diretorio, SEEK_SET);
     fwrite(&d, sizeof(struct diretorio), 1, arc);
 
     return;
