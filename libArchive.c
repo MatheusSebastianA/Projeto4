@@ -3,63 +3,112 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "libArchive.h"
 
-#define CONT_TAM 1024
+#define BUFFER_SIZE 1024
 
-struct archive* cria_archive(){
-    struct archive *arc;
+FILE* abre_archive_escrita(char *nomeArq){
+    FILE *arq;
+    arq = fopen(nomeArq, "r+");
 
-    if(!(arc = malloc(sizeof(struct archive))))
+    if(arq == NULL)
+        arq = fopen(nomeArq, "w");
+
+    if(arq == NULL)
         return NULL;
-
-
-    arc->pDiretorio = 0;
-    arc->dir = cria_diretorio();
-    arc->inicioArc = NULL;
-
-    return arc;
+    
+    return arq;
 }
 
-int archive_vazio(struct archive *arc){
-    if(arc->inicioArc == NULL)
-        return 1;
+FILE* abre_archive_leitura(char *nomeArq){
+    FILE *arq;
+    arq = fopen(nomeArq, "r");
+
+    if(arq == NULL)
+        return NULL;
+    
+    return arq;
+}
+int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
+    char buffer[BUFFER_SIZE];
+    int tam = nodo->tamanho % BUFFER_SIZE;
+
+    for(int i = 0; i < tam; i++)
+        fread(&buffer[i], sizeof(char), 1, arq);
+    
+    fwrite(&buffer, sizeof(char), tam, archive);
 
     return 0;
 }
 
-struct archive* insere_conteudo(struct archive *arc, char *nomeArq){
-    FILE *arq;
-    arq = fopen(nomeArq, "r");
+int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
+    char buffer[BUFFER_SIZE];
 
-    if(archive_vazio(arc)){
-        if(!(arc->inicioArc = malloc(sizeof(struct blocoConteudo))))
-            return NULL;
+    fread(buffer, sizeof(char), BUFFER_SIZE, arq);
+    fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
 
-        struct blocoConteudo *aux;
-        aux = arc->inicioArc;
-        while(!feof(arq)){
-            fread(aux, sizeof(char), 1024, arq);
-            aux = aux->prox;
-            if(!(aux = malloc(sizeof(struct blocoConteudo))))
-                return NULL;
-            aux->prox = NULL;
-            arc->pDiretorio++;
-        }
+    return 0;
+}
 
+int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
+    int blocos, resto, bytes = 0;
+    FILE *arq, *arc;
+    struct nodoM *aux;
+
+    arq = abre_archive_leitura(nomeArq);
+    if(!arq)
+        return 1;
+    
+    arc = abre_archive_escrita(nomeArc);   
+    if(!arc)
+        return 1;
+
+    if(diretorio_vazio(d)){
+        insere(d, nomeArq, func);
+        fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
+        blocos = d->inicio->tamanho / BUFFER_SIZE;
+        resto = d->inicio->tamanho % BUFFER_SIZE;
+        if(blocos >= 1)
+            for(blocos = blocos; blocos > 0; blocos--)
+                insere_bloco_conteudo(d->inicio, arq, arc);
+
+        if(blocos < 1 && resto != 0)
+            insere_conteudo_menor1024(d->inicio, arq, arc);
+        
+        fclose(arq);
+        fclose(arc);
+        return 0;
     }
 
-    return arc;
-}
+    fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
+    aux = malloc(sizeof(struct nodoM));
+    aux = d->inicio;
+    while(aux->prox != NULL){
+        bytes = bytes + aux->tamanho;
+        aux = aux->prox;
+    }
+    insere(d, nomeArq, func);
+    bytes = aux->tamanho + bytes;
+    fseek(arc, bytes, SEEK_SET);
+    blocos = d->fim->tamanho / BUFFER_SIZE;
+    resto = d->fim->tamanho % BUFFER_SIZE;
+    if(blocos >= 1)
+        for(blocos = blocos; blocos > 0; blocos--)
+            insere_bloco_conteudo(d->fim, arq, arc);
 
-void imprime_conteudo(struct archive *arc, char *nomeArq){
-    FILE *arq;
-    arq = fopen(nomeArq, "w");
-    struct blocoConteudo *aux;
-    aux = arc->inicioArc;
+    if(blocos < 1 && resto != 0)
+        insere_conteudo_menor1024(d->fim, arq, arc);
 
-    fwrite(aux->buffer, sizeof(char), 1024, arq);
+    fwrite(d, sizeof(struct diretorio), 1, arc);
+    printf("Esse numero é o inicio do dir: %ld\n", d->inicio_diretorio);
 
-    return;
-}
+    fclose(arq);
+    fclose(arc);
+    
+    return 0;
+}   
+
+
+
 
