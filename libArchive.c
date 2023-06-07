@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdlib.h>
@@ -30,6 +31,18 @@ FILE* abre_archive_leitura(char *nomeArq){
     
     return arq;
 }
+
+void insere_diretorio(struct diretorio *d, char *nomeArc){
+    FILE *arc = abre_archive_escrita(nomeArc);   
+
+    if(!arc)
+        return;
+    fseek(arc, d->inicio_diretorio - (d->fim->ordem + 1), SEEK_SET);
+    fwrite(&d, sizeof(struct diretorio), 1, arc);
+
+    return;
+}
+
 int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
     char buffer[BUFFER_SIZE];
     int tam = nodo->tamanho % BUFFER_SIZE;
@@ -66,6 +79,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 
     if(diretorio_vazio(d)){
         insere(d, nomeArq, func);
+        printf("Inicio do diretorio: %ld\n", d->inicio_diretorio);
         fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
         blocos = d->inicio->tamanho / BUFFER_SIZE;
         resto = d->inicio->tamanho % BUFFER_SIZE;
@@ -81,16 +95,18 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
         return 0;
     }
 
-    fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
+    fseek(arc, 0, SEEK_SET);
     aux = malloc(sizeof(struct nodoM));
     aux = d->inicio;
     while(aux->prox != NULL){
         bytes = bytes + aux->tamanho;
         aux = aux->prox;
     }
+    
     insere(d, nomeArq, func);
+    fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
     bytes = aux->tamanho + bytes;
-    fseek(arc, bytes, SEEK_SET);
+    fseek(arc, -1, SEEK_END);
     blocos = d->fim->tamanho / BUFFER_SIZE;
     resto = d->fim->tamanho % BUFFER_SIZE;
     if(blocos >= 1)
@@ -99,9 +115,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 
     if(blocos < 1 && resto != 0)
         insere_conteudo_menor1024(d->fim, arq, arc);
-
-    fwrite(d, sizeof(struct diretorio), 1, arc);
-    printf("Esse numero é o inicio do dir: %ld\n", d->inicio_diretorio);
+    
 
     fclose(arq);
     fclose(arc);
