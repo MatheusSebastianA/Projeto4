@@ -99,9 +99,10 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         d->inicio->nomeArq = nomeArq;
         d->inicio = conteudo(d->inicio, nomeArq);
         d->inicio->ordem = 0;
-        d->inicio->localizacao = 1;
+        d->inicio->localizacao = sizeof(long int);
         d->inicio_diretorio = d->inicio->tamanho + sizeof(long int);
         d->fim = d->inicio;
+        printf("novo começo dir é: %ld\n", d->inicio_diretorio);
 
         return d->inicio;
     }
@@ -119,6 +120,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     aux->prox->nomeArq = nomeArq;
     aux->prox = conteudo(aux->prox, nomeArq);
     aux->prox->ordem = aux->ordem + 1;
+    aux->prox->localizacao = d->inicio_diretorio;
     d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho;
     
     d->fim = aux->prox;
@@ -173,6 +175,7 @@ void imprime_diretorio(struct diretorio *d){
     struct nodoM *aux = d->inicio;
     while(aux != NULL){
         printf("nome arq: %s\n", aux->nomeArq);
+        printf("Inicio do arquivo: %ld\n", aux->localizacao);
         printf("Tamanho do arquivo: %ld\n", aux->tamanho);
         printf("Ordem do arq: %d\n", aux->ordem);
         aux = aux->prox;
