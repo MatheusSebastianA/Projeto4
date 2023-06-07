@@ -5,9 +5,6 @@
 #include <string.h>
 #include "libDiretorio.h"
 
-
-#define CONT_TAM 1024
-
 struct diretorio* cria_diretorio(){
     struct diretorio *d;
 
@@ -60,43 +57,59 @@ struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
     return NULL;
 }
 
-struct nodoM* insereI(struct nodoM *aux, char *nomeArq){
-    stat(nomeArq, aux->arquivo);
-    return aux;
+struct nodoM* conteudo(struct nodoM *nodo, char *nomeArq){
+    struct stat *aux;
+    if(!(aux = malloc(sizeof(struct stat))))
+        return NULL;
+
+    stat(nomeArq, aux);
+
+    nodo->data = aux->st_mtime;
+    nodo->permissoes = aux->st_mode;
+    nodo->tamanho = aux->st_size;
+    nodo->uid = aux->st_uid;
+
+    return nodo;
 }
 
-struct nodoM* insereA(struct nodoM *aux, char *nomeArq){
+struct nodoM* insereI(struct nodoM *nodo, char *nomeArq){
+    nodo = conteudo(nodo, nomeArq);
+
+    return nodo;
+}
+
+struct nodoM* insereA(struct nodoM *nodo, char *nomeArq){
     struct stat *compara;
     compara = malloc(sizeof(struct stat));
     stat(nomeArq, compara);
 
-    if(compara->st_mtime <= aux->arquivo->st_mtime)
-        stat(nomeArq, aux->arquivo);
+    if(compara->st_mtime <= nodo->data)
+        nodo = conteudo(nodo, nomeArq);
 
-    return aux;
+    return nodo;
 }
 
-int insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
+struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     struct nodoM *aux;
-
     if(diretorio_vazio(d)){
+        
         if(!(d->inicio =  malloc(sizeof(struct nodoM))))
-            return 0;
+            return NULL;
 
         d->inicio->nomeArq = nomeArq;
-        if(!(d->inicio->arquivo = malloc(sizeof(struct stat))))
-            return 0;
-
-        stat(nomeArq, d->inicio->arquivo);
+        d->inicio = conteudo(d->inicio, nomeArq);
+        d->inicio->ordem = 0;
+        d->inicio->localizacao = 1;
+        d->inicio_diretorio = d->inicio->tamanho + sizeof(long int);
         d->fim = d->inicio;
 
-        return 1;
+        return d->inicio;
     }
 
     aux = existe_arq(d, nomeArq);
     if(aux != NULL){
         aux = func(aux, nomeArq);
-        return 1;
+        return aux;
     }
 
     aux = d->fim;
@@ -104,14 +117,13 @@ int insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) (struct no
         return 0;
 
     aux->prox->nomeArq = nomeArq;
+    aux->prox = conteudo(aux->prox, nomeArq);
+    aux->prox->ordem = aux->ordem + 1;
+    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho;
+    
+    d->fim = aux->prox;
 
-    if(!(aux->prox->arquivo = malloc(sizeof(struct stat))))
-            return 0;
-        
-    stat(nomeArq, aux->prox->arquivo);
-        d->fim = aux->prox;
-
-    return 1;
+    return d->fim;
 }
 
 int insere_apos_target(struct diretorio *d, char *nomeArq, char *target){
@@ -124,12 +136,11 @@ int insere_apos_target(struct diretorio *d, char *nomeArq, char *target){
 
     if(!(novo = malloc(sizeof(struct nodoM))))
         return 0;
-    if(!(novo->arquivo = malloc(sizeof(struct stat))))
-        return 0;
 
     if(aux->prox == NULL){
         novo->nomeArq = nomeArq;
-        stat(nomeArq, novo->arquivo);
+        novo = conteudo(novo, nomeArq);
+        novo->ordem = aux->ordem + 1;
         novo->prox = NULL;
         aux->prox = novo;
         d->fim = novo;
@@ -138,7 +149,8 @@ int insere_apos_target(struct diretorio *d, char *nomeArq, char *target){
 
     temp = aux->prox;
     novo->nomeArq = nomeArq;
-    stat(nomeArq, novo->arquivo);
+    novo = conteudo(novo, nomeArq);
+    novo->ordem = aux->ordem + 1;
     aux->prox = novo;
     novo->prox = temp;
 
@@ -154,15 +166,15 @@ int diretorio_vazio(struct diretorio *d){
 
 void imprime_diretorio(struct diretorio *d){
     if(diretorio_vazio(d)){
-        printf("Diretorio vazio");
+        printf("Diretorio vazio\n");
         return;
     }
 
     struct nodoM *aux = d->inicio;
     while(aux != NULL){
         printf("nome arq: %s\n", aux->nomeArq);
-        printf("tamanho desse arq: %ld\n", aux->arquivo->st_size);
-
+        printf("Tamanho do arquivo: %ld\n", aux->tamanho);
+        printf("Ordem do arq: %d\n", aux->ordem);
         aux = aux->prox;
     }
     
