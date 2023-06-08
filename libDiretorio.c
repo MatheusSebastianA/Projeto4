@@ -95,12 +95,11 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         
         if(!(d->inicio =  malloc(sizeof(struct nodoM))))
             return NULL;
-
-        d->inicio->nomeArq = nomeArq;
+        strcpy(d->inicio->nomeArq, nomeArq);
         d->inicio = conteudo(d->inicio, nomeArq);
         d->inicio->ordem = 0;
         d->inicio->localizacao = sizeof(long int);
-        d->inicio_diretorio = d->inicio->tamanho + sizeof(long int) - 1;
+        d->inicio_diretorio = d->inicio->tamanho + sizeof(long int);
         d->fim = d->inicio;
         printf("novo começo dir é: %ld\n", d->inicio_diretorio);
 
@@ -117,11 +116,11 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     if(!(aux->prox = malloc(sizeof(struct nodoM))))
         return 0;
 
-    aux->prox->nomeArq = nomeArq;
+    strcpy(aux->prox->nomeArq, nomeArq);
     aux->prox = conteudo(aux->prox, nomeArq);
     aux->prox->ordem = aux->ordem + 1;
     aux->prox->localizacao = d->inicio_diretorio;
-    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho - 1  ;
+    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho;
     
     d->fim = aux->prox;
 
@@ -140,7 +139,7 @@ int insere_apos_target(struct diretorio *d, char *nomeArq, char *target){
         return 0;
 
     if(aux->prox == NULL){
-        novo->nomeArq = nomeArq;
+        strcpy(novo->nomeArq, nomeArq);
         novo = conteudo(novo, nomeArq);
         novo->ordem = aux->ordem + 1;
         novo->prox = NULL;
@@ -150,7 +149,7 @@ int insere_apos_target(struct diretorio *d, char *nomeArq, char *target){
     }
 
     temp = aux->prox;
-    novo->nomeArq = nomeArq;
+    strcpy(novo->nomeArq, nomeArq);
     novo = conteudo(novo, nomeArq);
     novo->ordem = aux->ordem + 1;
     aux->prox = novo;
