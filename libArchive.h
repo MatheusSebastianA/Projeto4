@@ -9,9 +9,11 @@
 #include <unistd.h>
 #include "libDiretorio.h"
 
-FILE* abre_archive_escrita(char *nomeArq);
+FILE* abre_archive_leitura_escrita(char *nomeArq);
 
 FILE* abre_archive_leitura(char *nomeArq);
+
+struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
 
 void insere_diretorio(struct diretorio *d, char *nomeArc);
 
