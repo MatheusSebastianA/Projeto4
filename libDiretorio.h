@@ -8,8 +8,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define TAM_NOME 64
+
 struct nodoM{
-    char *nomeArq;
+    char nomeArq[TAM_NOME];
     uid_t uid;
     mode_t permissoes;
     off_t tamanho;
