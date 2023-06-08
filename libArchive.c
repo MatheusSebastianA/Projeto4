@@ -7,6 +7,7 @@
 #include <math.h>
 #include "libArchive.h"
 
+#define _XOPEN_SOURCE_EXTENDED 1
 #define BUFFER_SIZE 1024
 
 FILE* abre_archive_leitura_escrita(char *nomeArq){
@@ -79,12 +80,6 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
         aux = aux->prox;
     }
 
-    fseek(arc, d->inicio_diretorio, SEEK_SET);
-    teste = malloc(sizeof(struct nodoM));
-    fread(teste, sizeof(struct nodoM), 1, arc);
-
-    printf("Aqui o nome do teste: %s\n", teste->nomeArq);
-
     fclose(arc);
     return;
 }
@@ -152,7 +147,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     insere(d, nomeArq, func);
     fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
     bytes = aux->tamanho + bytes;
-    fseek(arc, -1, SEEK_END);
+    fseek(arc, d->fim + d->fim->tamanho, SEEK_SET);
     blocos = d->fim->tamanho / BUFFER_SIZE;
     resto = d->fim->tamanho % BUFFER_SIZE;
     if(blocos >= 1)
