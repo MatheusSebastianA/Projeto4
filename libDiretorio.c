@@ -96,6 +96,9 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         if(!(d->inicio =  malloc(sizeof(struct nodoM))))
             return NULL;
         strcpy(d->inicio->nomeArq, nomeArq);
+        int tamahno_str = strlen(d->inicio->nomeArq);
+        printf("O tamanho do primeiro nome é: %d\n", tamahno_str);
+        printf("O tamanho do primeiro nome é: %s\n", d->inicio->nomeArq);
         d->inicio = conteudo(d->inicio, nomeArq);
         d->inicio->ordem = 0;
         d->inicio->localizacao = sizeof(long int);
