@@ -9,7 +9,7 @@
 
 #define BUFFER_SIZE 1024
 
-FILE* abre_archive_escrita(char *nomeArq){
+FILE* abre_archive_leitura_escrita(char *nomeArq){
     FILE *arq;
     arq = fopen(nomeArq, "r+");
 
@@ -32,19 +32,60 @@ FILE* abre_archive_leitura(char *nomeArq){
     return arq;
 }
 
+struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
+    long int ini_dir = 0, fim;
+    struct nodoM *aux;
+    FILE *arc = abre_archive_leitura_escrita(nomeArc);   
+
+    if(!arc)
+        return NULL;
+
+    fread(&ini_dir, sizeof(long int), 1, arc);
+    fseek(arc, 0, SEEK_END);
+    fim = ftell(arc);
+    fseek(arc, ini_dir, SEEK_SET);
+    
+    while(fim - ftell(arc) != 0){
+        aux = malloc(sizeof(struct nodoM));
+        fread(aux, sizeof(struct nodoM), 1, arc);
+        printf("Aqui o nome do teste: %s\n", aux->nomeArq);
+        insere(d, aux->nomeArq, insereI);
+        aux = aux->prox;
+    }
+
+    
+
+    fclose(arc);
+
+    return d;
+}
+
 void insere_diretorio(struct diretorio *d, char *nomeArc){
+    long int teste1 = 0;
     struct nodoM *teste, *aux = d->inicio;
-    FILE *arc = abre_archive_escrita(nomeArc);   
+    FILE *arc = abre_archive_leitura_escrita(nomeArc);   
 
     if(!arc)
         return;
-        
+
+    fread(&teste1, sizeof(long int), 1, arc);
+
+    printf("Inicio do diretorio é: %ld\n", teste1);
+    printf("Inicio do diretorio é: %ld\n", d->inicio_diretorio);
+
     fseek(arc, d->inicio_diretorio, SEEK_SET);
     while(aux != NULL){
         fwrite(aux, sizeof(struct nodoM), 1, arc);
         aux = aux->prox;
     }
 
+    fseek(arc, d->inicio_diretorio, SEEK_SET);
+    teste = malloc(sizeof(struct nodoM));
+    fread(teste, sizeof(struct nodoM), 1, arc);
+
+    printf("Aqui o nome do teste: %s\n", teste->nomeArq);
+
+    fclose(arc);
     return;
 }
 
@@ -78,12 +119,13 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     if(!arq)
         return 1;
     
-    arc = abre_archive_escrita(nomeArc);   
+    arc = abre_archive_leitura_escrita(nomeArc);   
     if(!arc)
         return 1;
 
     if(diretorio_vazio(d)){
         insere(d, nomeArq, func);
+        printf("Inicio do diretorio: %ld\n", d->inicio_diretorio);
         fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
         blocos = d->inicio->tamanho / BUFFER_SIZE;
         resto = d->inicio->tamanho % BUFFER_SIZE;
