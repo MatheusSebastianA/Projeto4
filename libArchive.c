@@ -33,12 +33,17 @@ FILE* abre_archive_leitura(char *nomeArq){
 }
 
 void insere_diretorio(struct diretorio *d, char *nomeArc){
+    struct nodoM *teste, *aux = d->inicio;
     FILE *arc = abre_archive_escrita(nomeArc);   
 
     if(!arc)
         return;
+        
     fseek(arc, d->inicio_diretorio, SEEK_SET);
-    fwrite(&d, sizeof(struct diretorio), 1, arc);
+    while(aux != NULL){
+        fwrite(aux, sizeof(struct nodoM), 1, arc);
+        aux = aux->prox;
+    }
 
     return;
 }
@@ -79,7 +84,6 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 
     if(diretorio_vazio(d)){
         insere(d, nomeArq, func);
-        printf("Inicio do diretorio: %ld\n", d->inicio_diretorio);
         fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
         blocos = d->inicio->tamanho / BUFFER_SIZE;
         resto = d->inicio->tamanho % BUFFER_SIZE;
@@ -122,7 +126,6 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     
     return 0;
 }   
-
 
 
 
