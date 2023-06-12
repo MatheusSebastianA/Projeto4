@@ -12,10 +12,10 @@
 
 FILE* abre_archive_leitura_escrita(char *nomeArq){
     FILE *arq;
-    arq = fopen(nomeArq, "r+");
+    arq = fopen(nomeArq, "r+b");
 
     if(arq == NULL)
-        arq = fopen(nomeArq, "w");
+        arq = fopen(nomeArq, "wb");
 
     if(arq == NULL)
         return NULL;
@@ -34,9 +34,10 @@ FILE* abre_archive_leitura(char *nomeArq){
 }
 
 struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
-    long int ini_dir = 0, fim;
-    struct nodoM *aux;
-    FILE *arc = abre_archive_leitura_escrita(nomeArc);   
+    long int ini_dir = 0, fim = 0;
+    struct nodoM *aux = NULL;
+    FILE *arc = NULL;
+    arc = abre_archive_leitura_escrita(nomeArc);   
 
     if(!arc)
         return NULL;
@@ -47,14 +48,22 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct n
     fseek(arc, ini_dir, SEEK_SET);
     
     while(fim - ftell(arc) != 0){
-        aux = malloc(sizeof(struct nodoM));
-        fread(aux, sizeof(struct nodoM), 1, arc);
-        printf("Aqui o nome do teste: %s\n", aux->nomeArq);
-        insere(d, aux->nomeArq, insereI);
+        if(!(aux = malloc(sizeof(struct nodoM))))
+            return NULL;
+
+
+        fread(aux->nomeArq, sizeof(strlen(aux->nomeArq)), 1, arc);
+        fread(&aux->data, sizeof(time_t), 1, arc);
+        fread(&aux->localizacao, sizeof(long int), 1, arc);
+        fread(&aux->ordem, sizeof(int), 1, arc);
+        fread(&aux->permissoes, sizeof(mode_t), 1, arc);
+        fread(&aux->tamanho, sizeof(off_t), 1, arc);
+        fread(&aux->uid, sizeof(uid_t), 1, arc);
+        insere(d, aux->nomeArq, func);
+
+
         aux = aux->prox;
     }
-
-    
 
     fclose(arc);
 
@@ -62,42 +71,47 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct n
 }
 
 void insere_diretorio(struct diretorio *d, char *nomeArc){
-    long int teste1 = 0;
-    struct nodoM *teste, *aux = d->inicio;
+    struct nodoM *aux = NULL;
     FILE *arc = abre_archive_leitura_escrita(nomeArc);   
 
     if(!arc)
         return;
-
-    fread(&teste1, sizeof(long int), 1, arc);
-
-    printf("Inicio do diretorio é: %ld\n", teste1);
-    printf("Inicio do diretorio é: %ld\n", d->inicio_diretorio);
-
+        
+    aux = d->inicio;
     fseek(arc, d->inicio_diretorio, SEEK_SET);
-    while(aux != NULL){
-        fwrite(aux, sizeof(struct nodoM), 1, arc);
+
+    for(int i = 0; i <= d->fim->ordem; i++){
+        fwrite(aux->nomeArq, strlen(aux->nomeArq), 1, arc);
+        fwrite(&aux->data, sizeof(time_t), 1, arc);
+        fwrite(&aux->localizacao, sizeof(long int), 1, arc);
+        fwrite(&aux->ordem, sizeof(int), 1, arc);
+        fwrite(&aux->permissoes, sizeof(mode_t), 1, arc);
+        fwrite(&aux->tamanho, sizeof(off_t), 1, arc);
+        fwrite(&aux->uid, sizeof(uid_t), 1, arc);
+    
         aux = aux->prox;
     }
 
-    fclose(arc);
     return;
 }
 
 int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
-    char buffer[BUFFER_SIZE];
-    int tam = nodo->tamanho % BUFFER_SIZE;
-
+    char buffer[BUFFER_SIZE] = {0};
+    int tam = 0;
+    int blocos = nodo->tamanho / BUFFER_SIZE;
+    tam = nodo->tamanho % BUFFER_SIZE;
+    
     for(int i = 0; i < tam; i++)
         fread(&buffer[i], sizeof(char), 1, arq);
-    
-    fwrite(&buffer, sizeof(char), tam, archive);
+
+    fseek(archive, nodo->localizacao + (blocos * 1024), SEEK_SET);
+    fwrite(&buffer, sizeof(char), tam, archive);    
 
     return 0;
 }
 
 int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE] = {0};
 
     fread(buffer, sizeof(char), BUFFER_SIZE, arq);
     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
@@ -106,9 +120,9 @@ int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
 }
 
 int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
-    int blocos, resto, bytes = 0;
-    FILE *arq, *arc;
-    struct nodoM *aux;
+    int blocos = 0, resto = 0;
+    FILE *arq = NULL, *arc = NULL;
+    struct nodoM *aux = NULL;
 
     arq = abre_archive_leitura(nomeArq);
     if(!arq)
@@ -119,8 +133,8 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
         return 1;
 
     if(diretorio_vazio(d)){
-        insere(d, nomeArq, func);
-        printf("Inicio do diretorio: %ld\n", d->inicio_diretorio);
+        d->inicio = insere(d, nomeArq, func);
+        fseek(arc, 0, SEEK_SET);
         fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
         blocos = d->inicio->tamanho / BUFFER_SIZE;
         resto = d->inicio->tamanho % BUFFER_SIZE;
@@ -128,6 +142,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
             for(blocos = blocos; blocos > 0; blocos--)
                 insere_bloco_conteudo(d->inicio, arq, arc);
 
+        fseek(arq, 1024*blocos - 1, SEEK_SET);
         if(blocos < 1 && resto != 0)
             insere_conteudo_menor1024(d->inicio, arq, arc);
         
@@ -135,34 +150,24 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
         fclose(arc);
         return 0;
     }
-
-    fseek(arc, 0, SEEK_SET);
-    aux = malloc(sizeof(struct nodoM));
-    aux = d->inicio;
-    while(aux->prox != NULL){
-        bytes = bytes + aux->tamanho;
-        aux = aux->prox;
-    }
     
     insere(d, nomeArq, func);
+    aux = d->fim;
+    fseek(arc, 0, SEEK_SET);
     fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
-    bytes = aux->tamanho + bytes;
-    fseek(arc, d->fim + d->fim->tamanho, SEEK_SET);
-    blocos = d->fim->tamanho / BUFFER_SIZE;
-    resto = d->fim->tamanho % BUFFER_SIZE;
+    fseek(arc, d->inicio_diretorio, SEEK_SET);
+    blocos = aux->tamanho / BUFFER_SIZE;
+    resto = aux->tamanho % BUFFER_SIZE;
     if(blocos >= 1)
         for(blocos = blocos; blocos > 0; blocos--)
-            insere_bloco_conteudo(d->fim, arq, arc);
+            insere_bloco_conteudo(aux, arq, arc);
 
     if(blocos < 1 && resto != 0)
-        insere_conteudo_menor1024(d->fim, arq, arc);
+        insere_conteudo_menor1024(aux, arq, arc);
     
 
     fclose(arq);
     fclose(arc);
     
     return 0;
-}   
-
-
-
+}
