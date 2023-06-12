@@ -34,9 +34,10 @@ FILE* abre_archive_leitura(char *nomeArq){
 }
 
 struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
-    long int ini_dir = 0, fim;
-    struct nodoM *aux;
-    FILE *arc = abre_archive_leitura_escrita(nomeArc);   
+    long int ini_dir = 0, fim = 0;
+    struct nodoM *aux = NULL;
+    FILE *arc = NULL;
+    arc = abre_archive_leitura_escrita(nomeArc);   
 
     if(!arc)
         return NULL;
@@ -49,12 +50,9 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct n
     while(fim - ftell(arc) != 0){
         aux = malloc(sizeof(struct nodoM));
         fread(aux, sizeof(struct nodoM), 1, arc);
-        printf("Aqui o nome do teste: %s\n", aux->nomeArq);
-        insere(d, aux->nomeArq, insereI);
+        insere(d, aux->nomeArq, func);
         aux = aux->prox;
     }
-
-    
 
     fclose(arc);
 
@@ -62,43 +60,41 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct n
 }
 
 void insere_diretorio(struct diretorio *d, char *nomeArc){
-    long int teste1 = 0;
-    struct nodoM *teste, *aux = d->inicio;
+    int ini_dir = 0;
+    struct nodoM *aux = NULL;
     FILE *arc = abre_archive_leitura_escrita(nomeArc);   
 
     if(!arc)
         return;
+    fread(&ini_dir, sizeof(long int), 1, arc);
+    fseek(arc, -1, SEEK_END);
 
-    fread(&teste1, sizeof(long int), 1, arc);
-
-    printf("Inicio do diretorio é: %ld\n", teste1);
-    printf("Inicio do diretorio é: %ld\n", d->inicio_diretorio);
-
-    fseek(arc, d->inicio_diretorio, SEEK_SET);
-    while(aux != NULL){
+    aux = d->inicio->prox;
         fwrite(aux, sizeof(struct nodoM), 1, arc);
-        aux = aux->prox;
-    }
 
     fclose(arc);
     return;
 }
 
 int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE] = {0};
     int tam = nodo->tamanho % BUFFER_SIZE;
 
     for(int i = 0; i < tam; i++)
         fread(&buffer[i], sizeof(char), 1, arq);
-    
-    fwrite(&buffer, sizeof(char), tam, archive);
+
+    fseek(archive, -1, SEEK_END);
+    for(int i = 0; i < tam; i++)
+        fwrite(&buffer[i], sizeof(char), 1, archive);    
 
     return 0;
 }
 
 int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE] = {0};
 
+    for(int i = 0; i < 1024; i++)
+        fread(&buffer[i], sizeof(char), 1, arq);
     fread(buffer, sizeof(char), BUFFER_SIZE, arq);
     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
 
@@ -106,9 +102,8 @@ int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
 }
 
 int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
-    int blocos, resto, bytes = 0;
-    FILE *arq, *arc;
-    struct nodoM *aux;
+    int blocos = 0, resto = 0;
+    FILE *arq = NULL, *arc = NULL;
 
     arq = abre_archive_leitura(nomeArq);
     if(!arq)
@@ -120,7 +115,6 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 
     if(diretorio_vazio(d)){
         insere(d, nomeArq, func);
-        printf("Inicio do diretorio: %ld\n", d->inicio_diretorio);
         fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
         blocos = d->inicio->tamanho / BUFFER_SIZE;
         resto = d->inicio->tamanho % BUFFER_SIZE;
@@ -135,19 +129,11 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
         fclose(arc);
         return 0;
     }
-
-    fseek(arc, 0, SEEK_SET);
-    aux = malloc(sizeof(struct nodoM));
-    aux = d->inicio;
-    while(aux->prox != NULL){
-        bytes = bytes + aux->tamanho;
-        aux = aux->prox;
-    }
     
     insere(d, nomeArq, func);
+    fseek(arc, 0, SEEK_SET);
     fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
-    bytes = aux->tamanho + bytes;
-    fseek(arc, d->fim + d->fim->tamanho, SEEK_SET);
+    fseek(arc, d->fim->localizacao + d->fim->tamanho - 1, SEEK_SET);
     blocos = d->fim->tamanho / BUFFER_SIZE;
     resto = d->fim->tamanho % BUFFER_SIZE;
     if(blocos >= 1)
@@ -162,7 +148,4 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     fclose(arc);
     
     return 0;
-}   
-
-
-
+}
