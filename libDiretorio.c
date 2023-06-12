@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "libDiretorio.h"
 
 struct diretorio* cria_diretorio(){
@@ -13,6 +14,7 @@ struct diretorio* cria_diretorio(){
 
     d->inicio = NULL;
     d->fim = NULL;
+    d->inicio_diretorio = 0;
     
     return d;
 }
@@ -41,16 +43,18 @@ int compara_nome(char *s1, char *s2, int cont){
 }
 
 struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
-    struct nodoM *aux = NULL;
-
+    struct nodoM *aux;
+        
     if(diretorio_vazio(d))
         return NULL;
 
     aux = d->inicio;
-    while(aux != NULL){
-        if(compara_nome(aux->nomeArq, nomeArq, 0))
-            return aux;
 
+    for(int i = 0; i <= d->fim->ordem; i++){
+        if(compara_nome(aux->nomeArq, nomeArq, 0)){
+            printf("Já existe paizao\n");
+            return aux;
+        }
         aux = aux->prox;
     }
 
@@ -63,12 +67,11 @@ struct nodoM* conteudo(struct nodoM *nodo, char *nomeArq){
         return NULL;
 
     stat(nomeArq, aux);
-
     nodo->data = aux->st_mtime;
     nodo->permissoes = aux->st_mode;
     nodo->tamanho = aux->st_size;
     nodo->uid = aux->st_uid;
-
+    
     return nodo;
 }
 
@@ -90,21 +93,18 @@ struct nodoM* insereA(struct nodoM *nodo, char *nomeArq){
 }
 
 struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
-    struct nodoM *aux;
+    struct nodoM *aux = NULL;
+    
     if(diretorio_vazio(d)){
-        
         if(!(d->inicio =  malloc(sizeof(struct nodoM))))
             return NULL;
         strcpy(d->inicio->nomeArq, nomeArq);
-        int tamahno_str = strlen(d->inicio->nomeArq);
-        printf("O tamanho do primeiro nome é: %d\n", tamahno_str);
-        printf("O tamanho do primeiro nome é: %s\n", d->inicio->nomeArq);
         d->inicio = conteudo(d->inicio, nomeArq);
         d->inicio->ordem = 0;
         d->inicio->localizacao = sizeof(long int);
-        d->inicio_diretorio = d->inicio->tamanho + sizeof(long int);
+        d->inicio_diretorio = d->inicio->tamanho + d->inicio->localizacao - 1;
         d->fim = d->inicio;
-        printf("novo começo dir é: %ld\n", d->inicio_diretorio);
+        d->fim->prox = NULL;
 
         return d->inicio;
     }
@@ -123,7 +123,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     aux->prox = conteudo(aux->prox, nomeArq);
     aux->prox->ordem = aux->ordem + 1;
     aux->prox->localizacao = d->inicio_diretorio;
-    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho;
+    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho - 1;
     
     d->fim = aux->prox;
 
@@ -173,13 +173,15 @@ void imprime_diretorio(struct diretorio *d){
         printf("Diretorio vazio\n");
         return;
     }
-
+    printf("Inicio do Diretorio fdp: %ld\n", d->inicio_diretorio);
     struct nodoM *aux = d->inicio;
-    while(aux != NULL){
+
+    for(int i = 0; i <= d->fim->ordem; i++){
         printf("nome arq: %s\n", aux->nomeArq);
         printf("Inicio do arquivo: %ld\n", aux->localizacao);
         printf("Tamanho do arquivo: %ld\n", aux->tamanho);
         printf("Ordem do arq: %d\n", aux->ordem);
+        
         aux = aux->prox;
     }
     
