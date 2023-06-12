@@ -102,7 +102,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         d->inicio = conteudo(d->inicio, nomeArq);
         d->inicio->ordem = 0;
         d->inicio->localizacao = sizeof(long int);
-        d->inicio_diretorio = d->inicio->tamanho + d->inicio->localizacao - 1;
+        d->inicio_diretorio = d->inicio->localizacao + d->inicio->tamanho - 1;
         d->fim = d->inicio;
         d->fim->prox = NULL;
 
@@ -117,14 +117,15 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
 
     aux = d->fim;
     if(!(aux->prox = malloc(sizeof(struct nodoM))))
-        return 0;
+        return NULL;
 
     strcpy(aux->prox->nomeArq, nomeArq);
     aux->prox = conteudo(aux->prox, nomeArq);
     aux->prox->ordem = aux->ordem + 1;
-    aux->prox->localizacao = d->inicio_diretorio;
-    d->inicio_diretorio = d->inicio_diretorio + aux->prox->tamanho - 1;
-    
+    aux->prox->localizacao = aux->localizacao + aux->tamanho - 1;
+    aux->prox->prox = NULL;
+
+    d->inicio_diretorio = aux->prox->localizacao + aux->prox->tamanho - 1;
     d->fim = aux->prox;
 
     return d->fim;
