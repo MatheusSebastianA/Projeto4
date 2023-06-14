@@ -7,7 +7,7 @@
 
 
 int main(int argc, char *argv[]){
-    struct diretorio *d;
+    struct diretorio *d = NULL;
     int opt;
     while ((opt = getopt(argc, argv, "iam:xrch")) != -1) {
         switch (opt){
@@ -30,16 +30,16 @@ int main(int argc, char *argv[]){
 	            return (1);
         }		
     }
-
-    d = cria_diretorio();
-    insere_conteudo(d, "teste1.txt", "backup.txt", insereI);
-    insere_conteudo(d, "teste2.txt", "backup.txt", insereI);
-    insere_conteudo(d, "teste3.txt", "backup.txt", insereI);
+    
+     d = cria_diretorio();
+    recebe_diretorio(d, "backup.txt");
+    atualiza_conteudo(d, "teste1.txt", "backup.txt", insereI);
+    atualiza_conteudo(d, "teste2.txt", "backup.txt", insereI);
+    atualiza_conteudo(d, "teste4.txt", "backup.txt", insereI);
+    atualiza_conteudo(d, "teste3.txt", "backup.txt", insereI);
     insere_diretorio(d, "backup.txt");
 
-    
-    extrai_conteudo_arquivo("backup.txt", "teste1.txt");
-
+    destroi_diretorio(d);
 
     return 0;
 }
