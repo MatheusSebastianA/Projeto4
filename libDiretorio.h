@@ -50,5 +50,6 @@ int diretorio_vazio(struct diretorio *d);
     
 void imprime_diretorio(struct diretorio *d);
 
+void destroi_diretorio(struct diretorio *d);
 
 #endif /* libDiretorio.h*/
