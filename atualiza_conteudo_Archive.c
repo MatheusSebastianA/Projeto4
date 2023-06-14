@@ -2,7 +2,8 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArc, char *nomeArq){
     char buffer[BUFFER_SIZE] = {0};
     FILE *archive, *destino;
     struct nodoM *aux = NULL;
-    long int tam_ant_arq = 0, diferenca = 0, fim = 0;
+    int i = 0;
+    long int tam_ant_arq = 0, diferenca = 0, fim = 0, teste = 0;
     struct diretorio *b = cria_diretorio();
     recebe_diretorio(b, "backup.txt", insereI);
     imprime_diretorio(b);
@@ -21,15 +22,38 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArc, char *nomeArq){
     
     fseek(archive, 0, SEEK_END);
     fim = ftell(archive);
+    rewind(archive);
+    fread(&b->inicio_diretorio, sizeof(long int), 1, archive);
     fseek(archive, aux->localizacao + tam_ant_arq, SEEK_SET);
 
     if(diferenca > 0){
-        if(aux->prox != NULL){
-            int blocos = aux->prox->localizacao / BUFFER_SIZE;
-            int resto = aux->prox->localizacao % BUFFER_SIZE;
-            fseek(archive, b->fim->localizacao, SEEK_SET);
+        printf("INI_DIR: %ld\n", b->inicio_diretorio);
+        teste = ftell(archive);
+        printf("POs atual: %ld\n", teste);
+        int blocos = (b->inicio_diretorio - ftell(archive)) / BUFFER_SIZE;
+        int resto = (b->inicio_diretorio - ftell(archive)) % BUFFER_SIZE;
+        if(blocos >= 1)
+            for(blocos = blocos; blocos > 0; blocos--){
+                fread(buffer, sizeof(char), BUFFER_SIZE, archive);
+                fseek(archive, diferenca - BUFFER_SIZE, SEEK_CUR);
+                fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
+            }
+        if(blocos < 1 && resto != 0){
+            for(i = 0; i < resto; i++){
+                fread(&buffer[i], sizeof(char), 1, archive);
+            }
             
+            fseek(archive, aux->localizacao + aux->tamanho + (blocos * 1024), SEEK_SET);
+            
+            printf("Lugar que vai escrever é %ld\n", teste);
+            fwrite(&buffer, sizeof(char), resto, archive);
+            printf("RESTo: %d\n", resto);
+            for(i = 0; i < resto; i++)
+                printf("Conteudo: %c\n", buffer[i]);
+            
+
         }
+            
     }
 
     
@@ -40,8 +64,8 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArc, char *nomeArq){
             
         aux = aux->prox;
     }
-    
-    destino = abre_archive_leitura_escrita(nomeArq);
+    printf("Depois das att:\n");
+    imprime_diretorio(b);
     
 
 
