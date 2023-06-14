@@ -15,7 +15,7 @@ FILE* abre_archive_leitura(char *nomeArq);
 
 void insere_diretorio_lista(struct diretorio *d, struct nodoM *aux);
 
-struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc,  struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
+struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc);
 
 void insere_diretorio(struct diretorio *d, char *nomeArc);
 
@@ -29,6 +29,6 @@ void imprime_conteudo(char *nomeArq);
 
 void extrai_conteudo_arquivo(char *arc, char *dest);
 
-
+void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc);
 
 #endif /* libArchive.h*/
