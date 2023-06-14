@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
-#include "libDiretorio.h"
+#include "libArchive.h"
 
 
 int main(int argc, char *argv[]){
@@ -32,11 +32,13 @@ int main(int argc, char *argv[]){
     }
 
     d = cria_diretorio();
-    insere(d, "teste.txt", insereI);
-    insere(d, "teste2.txt", insereI);
-    insere(d, "teste3.txt", insereI);
-    insere_apos_target(d, "teste4.txt", "teste2.txt");
-    imprime_diretorio(d);
+    insere_conteudo(d, "teste1.txt", "backup.txt", insereI);
+    insere_conteudo(d, "teste2.txt", "backup.txt", insereI);
+    insere_conteudo(d, "teste3.txt", "backup.txt", insereI);
+    insere_diretorio(d, "backup.txt");
+
+    
+    extrai_conteudo_arquivo("backup.txt", "teste1.txt");
 
 
     return 0;
