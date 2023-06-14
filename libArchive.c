@@ -109,6 +109,8 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
         aux = aux->prox;
     }
 
+    fclose(arc);
+
     return;
 }
 
