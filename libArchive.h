@@ -29,6 +29,6 @@ void imprime_conteudo(char *nomeArq);
 
 void extrai_conteudo_arquivo(char *arc, char *dest);
 
-void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc);
+void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
 
 #endif /* libArchive.h*/
