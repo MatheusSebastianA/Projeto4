@@ -72,6 +72,9 @@ struct nodoM* conteudo(struct nodoM *nodo, char *nomeArq){
     nodo->tamanho = aux->st_size;
     nodo->uid = aux->st_uid;
     
+
+    free(aux);
+
     return nodo;
 }
 
@@ -189,5 +192,28 @@ void imprime_diretorio(struct diretorio *d){
         aux = aux->prox;
     }
     
+    return;
+}
+
+void destroi_diretorio(struct diretorio *d){
+    struct nodoM *aux = NULL;
+
+    if(diretorio_vazio(d)){
+        free(d->inicio);
+        free(d->fim);
+        free(d);
+        return;
+    }
+    
+    aux = d->inicio;
+    while(aux->prox != NULL){
+        aux = aux->prox;
+        free(d->inicio);
+        d->inicio = aux;
+    }
+
+    free(d->fim);
+    free(d);
+
     return;
 }
