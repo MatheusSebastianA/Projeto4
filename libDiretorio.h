@@ -12,6 +12,7 @@
 
 struct nodoM{
     char nomeArq[TAM_NOME];
+    int tam_nome;
     uid_t uid;
     mode_t permissoes;
     off_t tamanho;
