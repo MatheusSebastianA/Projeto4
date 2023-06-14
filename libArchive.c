@@ -66,7 +66,7 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
                 return NULL;
             d->inicio = aux;
             d->inicio->prox = NULL;
-            d->inicio_diretorio = 0;
+            d->inicio_diretorio = ini_dir;
             d->fim = d->inicio;
         }
 
@@ -75,7 +75,7 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
                 return NULL;
             d->fim->prox = aux;
             d->fim = aux;
-            d->inicio_diretorio = 0;
+            d->inicio_diretorio = ini_dir;
         }
 
 
@@ -220,16 +220,23 @@ void extrai_conteudo_arquivo(char *arc, char *dest){
     return;
 }
 
-void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc){
+void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     char buffer[BUFFER_SIZE] = {0};
     FILE *archive, *arquivo;
     struct nodoM *aux = NULL;
-    int i = 0, blocos, resto;
-    long int tam_ant_arq = 0, diferenca = 0, fim = 0, teste = 0;
+    int i, blocos, resto;
+    long int tam_ant_arq = 0, diferenca = 0;
+
+    if(diretorio_vazio(d)){
+        insere_conteudo(d, nomeArq, nomeArc, func);
+        return;
+    }
 
     aux = existe_arq(d, nomeArq);
-    if(aux == NULL)
+    if(aux == NULL){
+        insere_conteudo(d, nomeArq, nomeArc, func);
         return;
+    }
 
     tam_ant_arq = aux->tamanho;
     conteudo(aux, nomeArq);
@@ -240,19 +247,19 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc){
         return;
     
     fseek(archive, 0, SEEK_END);
-    fim = ftell(archive);
     rewind(archive);
     fread(&d->inicio_diretorio, sizeof(long int), 1, archive);
     fseek(archive, aux->localizacao + tam_ant_arq, SEEK_SET);
 
     if(diferenca > 0){
-        teste = ftell(archive);
         blocos = (d->inicio_diretorio - ftell(archive)) / BUFFER_SIZE;
         resto = (d->inicio_diretorio - ftell(archive)) % BUFFER_SIZE;
+        i = blocos;
         if(blocos >= 1)
             for(blocos = blocos; blocos > 0; blocos--){
+                fseek(archive, aux->localizacao + tam_ant_arq + (i - blocos)*1024 ,SEEK_SET);
                 fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                fseek(archive, diferenca - BUFFER_SIZE, SEEK_CUR);
+                fseek(archive, diferenca, SEEK_CUR);
                 fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
             }
         if(blocos < 1 && resto != 0){
@@ -262,10 +269,29 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc){
             
             fseek(archive, aux->localizacao + aux->tamanho + (blocos * 1024), SEEK_SET);
             fwrite(&buffer, sizeof(char), resto, archive);
-            
-
         }
+    }
+
+    else{
+        blocos = (d->inicio_diretorio - ftell(archive)) / BUFFER_SIZE;
+        resto = (d->inicio_diretorio - ftell(archive)) % BUFFER_SIZE;
+        i = blocos;
+        if(blocos >= 1)
+            for(blocos = blocos; blocos > 0; blocos--){
+                fseek(archive, aux->localizacao + tam_ant_arq + (i - blocos)*1024, SEEK_SET);
+                fread(buffer, sizeof(char), BUFFER_SIZE, archive);
+                fseek(archive, diferenca - (i - blocos)*1024, SEEK_CUR);
+                fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
+            }
+        if(blocos < 1 && resto != 0){
+            for(i = 0; i < resto; i++){
+                fread(&buffer[i], sizeof(char), 1, archive);
+            }
             
+            fseek(archive, aux->localizacao + aux->tamanho + diferenca + (blocos * 1024), SEEK_SET);
+            fwrite(&buffer, sizeof(char), resto, archive);
+        }
+        truncate("backup.txt", ftell(archive));
     }
     arquivo = abre_archive_leitura(nomeArq);
 
@@ -274,7 +300,7 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc){
 
     blocos = aux->tamanho / BUFFER_SIZE;
     resto = aux->tamanho % BUFFER_SIZE;
-    fseek(archive, aux->localizacao, SEEK_CUR);
+    fseek(archive, aux->localizacao, SEEK_SET);
     if(blocos >= 1)
         for(blocos = blocos; blocos > 0; blocos--)
             insere_bloco_conteudo(aux, arquivo, archive);
