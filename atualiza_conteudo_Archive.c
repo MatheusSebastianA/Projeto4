@@ -27,9 +27,6 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArc, char *nomeArq){
     fseek(archive, aux->localizacao + tam_ant_arq, SEEK_SET);
 
     if(diferenca > 0){
-        printf("INI_DIR: %ld\n", b->inicio_diretorio);
-        teste = ftell(archive);
-        printf("POs atual: %ld\n", teste);
         int blocos = (b->inicio_diretorio - ftell(archive)) / BUFFER_SIZE;
         int resto = (b->inicio_diretorio - ftell(archive)) % BUFFER_SIZE;
         if(blocos >= 1)
@@ -44,14 +41,7 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArc, char *nomeArq){
             }
             
             fseek(archive, aux->localizacao + aux->tamanho + (blocos * 1024), SEEK_SET);
-            
-            printf("Lugar que vai escrever é %ld\n", teste);
             fwrite(&buffer, sizeof(char), resto, archive);
-            printf("RESTo: %d\n", resto);
-            for(i = 0; i < resto; i++)
-                printf("Conteudo: %c\n", buffer[i]);
-            
-
         }
             
     }
