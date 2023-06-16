@@ -42,6 +42,7 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
     if(!arc)
         return NULL;
 
+
     fread(&ini_dir, sizeof(long int), 1, arc);
     fseek(arc, 0, SEEK_END);
     fim = ftell(arc);
@@ -52,7 +53,7 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
             return NULL;
 
         fread(&aux->tam_nome, sizeof(int), 1, arc);
-        fread(aux->nomeArq,sizeof(char), aux->tam_nome, arc);
+        fread(aux->nomeArq, sizeof(char), aux->tam_nome, arc);
         fread(&aux->data, sizeof(time_t), 1, arc);
         fread(&aux->localizacao, sizeof(long int), 1, arc);
         fread(&aux->ordem, sizeof(int), 1, arc);
@@ -61,26 +62,24 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
         fread(&aux->uid, sizeof(uid_t), 1, arc);
 
         if(diretorio_vazio(d)){
-
-            if(!(d->inicio = malloc(sizeof(struct nodoM))))
-                return NULL;
             d->inicio = aux;
             d->inicio->prox = NULL;
             d->inicio_diretorio = ini_dir;
             d->fim = d->inicio;
+            d->fim->prox = NULL;
         }
 
         else{
-            if(!(d->fim->prox = malloc(sizeof(struct nodoM))))
-                return NULL;
             d->fim->prox = aux;
             d->fim = aux;
+            d->fim->prox = NULL;
             d->inicio_diretorio = ini_dir;
         }
 
 
         aux = aux->prox;
     }
+
     fclose(arc);
 
     return d;
@@ -98,7 +97,7 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
 
     for(int i = 0; i <= d->fim->ordem; i++){
         fwrite(&aux->tam_nome, sizeof(int), 1, arc);
-        fwrite(aux->nomeArq, strlen(aux->nomeArq), 1, arc);
+        fwrite(aux->nomeArq, sizeof(char), aux->tam_nome, arc);
         fwrite(&aux->data, sizeof(time_t), 1, arc);
         fwrite(&aux->localizacao, sizeof(long int), 1, arc);
         fwrite(&aux->ordem, sizeof(int), 1, arc);
@@ -314,8 +313,6 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
             
         aux = aux->prox;
     }
-    printf("Depois das att:\n");
-    imprime_diretorio(d);
     d->inicio_diretorio = d->inicio_diretorio + diferenca;
     rewind(archive);
     fwrite(&d->inicio_diretorio, sizeof(long int), 1, archive);
