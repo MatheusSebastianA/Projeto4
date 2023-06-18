@@ -136,7 +136,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
 }
 
 int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *target){
-    struct nodoM *aux, *novo = NULL, *temp, *temp2, *anterior;
+    struct nodoM *aux, *novo, *temp, *temp2, *anterior;
     
     aux = existe_arq(d, target);
 
