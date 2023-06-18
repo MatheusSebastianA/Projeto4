@@ -43,7 +43,7 @@ int compara_nome(char *s1, char *s2, int cont){
 }
 
 struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
-    struct nodoM *aux;
+    struct nodoM *aux = NULL;
         
     if(diretorio_vazio(d))
         return NULL;
@@ -52,7 +52,6 @@ struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
 
     for(int i = 0; i <= d->fim->ordem; i++){
         if(compara_nome(aux->nomeArq, nomeArq, 0)){
-            printf("Já existe paizao\n");
             return aux;
         }
         aux = aux->prox;
@@ -136,35 +135,143 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     return d->fim;
 }
 
-int insere_apos_target(struct diretorio *d, char *nomeArq, char *target){
-    struct nodoM *aux, *novo, *temp;
+int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *target){
+    struct nodoM *aux, *novo = NULL, *temp, *temp2, *anterior;
     
     aux = existe_arq(d, target);
 
     if(aux == NULL)
-        return 0;
+        return 1;
+    
+    novo = existe_arq(d, nomeArq);
+
+    if(novo != NULL){
+        
+        if(aux->prox == novo)
+            return 1;
+
+        if(novo->ordem == d->fim->ordem){
+            printf("TO AQUI PAE 1\n");
+            temp = aux->prox;
+            anterior = d->inicio;
+
+            while(anterior->prox != novo)
+                anterior = anterior->prox;
+            
+
+            anterior->prox = novo->prox;
+            aux->prox = novo;
+            novo->prox = temp;
+
+            int i = 0;
+            aux = d->inicio;
+            while(aux->prox != NULL){
+                aux->ordem = i;
+                aux = aux->prox;
+                i++;
+            }
+            aux->ordem = i;
+            d->fim = aux;
+            d->fim->prox = NULL;
+            return 0;
+        }
+
+        if(novo->ordem == d->inicio->ordem){
+            printf("TO AQUI PAE 2\n");
+            d->inicio = novo->prox;
+            temp = aux->prox;
+            anterior = d->inicio;
+            aux->prox = novo;
+            novo->prox = temp;
+
+            int i = 0;
+            aux = d->inicio;
+            while(aux->prox != NULL){
+                aux->ordem = i;
+                aux = aux->prox;
+                i++;
+            }
+
+            aux->ordem = i;
+            d->fim = aux;
+            d->fim->prox = NULL;
+        
+            return 0;
+        }
+        
+        if(novo->ordem > aux->ordem){
+            printf("TO AQUI PAE 3\n");
+            int ordem = novo->ordem;
+            temp = aux->prox;
+            aux->prox = novo;
+            temp2 = novo->prox;
+            novo->prox = temp;
+
+            for(int i = temp->ordem; i < ordem - 1; i++){
+                temp->ordem = temp->ordem + 1;
+                temp = temp->prox;
+            }
+
+            temp->prox = temp2;
+            novo->ordem = aux->ordem + 1;
+
+            return 0;
+        }
+
+        if(novo->ordem < aux->ordem){
+            printf("TO AQUI PAE 4\n");
+            temp = aux->prox;
+            aux->prox = novo;
+            anterior = d->inicio;
+
+            while(anterior->prox != novo){
+                anterior->ordem = anterior->ordem - 1;
+                anterior = anterior->prox;
+            }
+
+            anterior->prox = novo->prox;
+            novo->prox = temp;
+
+            int i = 0;
+            aux = d->inicio;
+            while(aux->prox != NULL){
+                aux->ordem = i;
+                aux = aux->prox;
+                i++;
+            }
+
+            aux->ordem = i;
+            d->fim = aux;
+            d->fim->prox = NULL;
+
+            return 0;
+        }  
+
+    }
 
     if(!(novo = malloc(sizeof(struct nodoM))))
-        return 0;
+        return 1;
 
     if(aux->prox == NULL){
         strcpy(novo->nomeArq, nomeArq);
         novo = conteudo(novo, nomeArq);
+        novo->tam_nome = strlen(nomeArq);
         novo->ordem = aux->ordem + 1;
         novo->prox = NULL;
         aux->prox = novo;
         d->fim = novo;
-        return 1;
+        return 0;
     }
 
     temp = aux->prox;
     strcpy(novo->nomeArq, nomeArq);
     novo = conteudo(novo, nomeArq);
+    novo->tam_nome = strlen(nomeArq);
     novo->ordem = aux->ordem + 1;
     aux->prox = novo;
     novo->prox = temp;
 
-    return 1;
+    return 0;
 }
 
 int diretorio_vazio(struct diretorio *d){
@@ -179,7 +286,7 @@ void imprime_diretorio(struct diretorio *d){
         printf("Diretorio vazio\n");
         return;
     }
-    printf("Inicio do Diretorio fdp: %ld\n", d->inicio_diretorio);
+    printf("Inicio do Diretorio: %ld\n", d->inicio_diretorio);
     struct nodoM *aux = d->inicio;
 
     for(int i = 0; i <= d->fim->ordem; i++){
