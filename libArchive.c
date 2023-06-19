@@ -253,7 +253,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
             fseek(archive, 0, SEEK_END);
-            truncate(nomeArc, d->inicio_diretorio + 104);
+            truncate(nomeArc, ftell(archive) - (novo->localizacao - aux->prox->localizacao));
             fseek(archive, 0, SEEK_END);
             
             blocos = cont - 1;
@@ -274,7 +274,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 fseek(archive, inicio + cont*1024, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
-            
+            truncate(nomeArc, d->inicio_diretorio);
             
             insere_diretorio_apos_target(d, nomeArq, target);
             temp = d->inicio;
@@ -559,4 +559,3 @@ void imprime_informacoes(struct diretorio *d, char *nomeArc){
     fclose(arc);
     return;
 }
-
