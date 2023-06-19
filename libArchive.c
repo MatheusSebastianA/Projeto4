@@ -203,7 +203,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     char buffer[BUFFER_SIZE] = {0};
     struct nodoM *aux, *novo, *temp;
-    int inicio, blocos, resto, i, posicao, cont;
+    int inicio, blocos, resto, i, posicao, cont, blocos_cont, resto_cont;
     FILE *archive = NULL;
 
     archive = abre_archive_leitura_escrita(nomeArc);
@@ -225,52 +225,63 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             inicio = aux->prox->localizacao;
             blocos = (d->inicio_diretorio - inicio) / BUFFER_SIZE;
             resto = (d->inicio_diretorio - inicio) % BUFFER_SIZE;
+            blocos_cont = novo->tamanho / BUFFER_SIZE;
+            if(blocos_cont >= 1)
+                resto_cont = novo->tamanho % BUFFER_SIZE; 
+            else
+                resto_cont = 0;
+                
             cont = blocos + 1;
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, d->inicio_diretorio - (cont - blocos)*1024, SEEK_END);
-                    fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, inicio + novo->tamanho + blocos*1024, SEEK_SET);
-                    fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
+                    fseek(archive, -(cont-blocos)*1024, SEEK_END);
+                    fread(buffer, sizeof(char), 1024, archive);
+                    fseek(archive, d->inicio_diretorio + resto, SEEK_SET);
+                    fwrite(buffer, sizeof(char), 1024, archive);
                 }
-
+    
             if(blocos < 1 && resto != 0){
                 fseek(archive, inicio, SEEK_SET);
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, inicio + novo->tamanho, SEEK_SET);
+                fseek(archive, d->inicio_diretorio, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
-
-            posicao = ftell(archive);
-            truncate(nomeArc, posicao);
-            blocos = (novo->tamanho) / BUFFER_SIZE;
-            resto = (novo->tamanho) % BUFFER_SIZE;
-            cont = blocos;
+            fseek(archive, 0, SEEK_END);
+            int teste = ftell(archive);
+            printf("teste = %d\n", teste);
+            truncate(nomeArc, d->inicio_diretorio + 104);
+            fseek(archive, 0, SEEK_END);
+            teste = ftell(archive);
+            printf("teste2 = %d\n", teste);
+            
+            blocos = cont - 1;
+            cont = blocos + 1;
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, -(blocos*1024) - resto, SEEK_END);
+                    fseek(archive, novo->localizacao + (cont - 1 - blocos), SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, inicio + (cont - blocos)*1024, SEEK_SET);
+                    fseek(archive, inicio, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
             if(blocos < 1 && resto != 0){
-                fseek(archive, -(resto + cont*1024), SEEK_END);
+                fseek(archive, d->inicio_diretorio - resto_cont, SEEK_SET);
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, inicio, SEEK_SET);
+                fseek(archive, inicio + 1024 , SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
-
+            
+            
             insere_diretorio_apos_target(d, nomeArq, target);
             temp = d->inicio;
             for(int i = temp->ordem; i < d->fim->ordem; i++){
                 temp->prox->localizacao = temp->localizacao + temp->tamanho; 
                 temp = temp->prox;
-            }
+            }  
              
             return;
         }
