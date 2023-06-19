@@ -12,6 +12,7 @@
 #define _XOPEN_SOURCE_EXTENDED 1
 #define BUFFER_SIZE 1024
 
+/*Função que abre um arquivo para leitura e escrita binaria, se ele não existe é aberto com apenas wb para que ele seja criado vazio */
 FILE* abre_archive_leitura_escrita(char *nomeArq){
     FILE *arq;
     arq = fopen(nomeArq, "r+b");
@@ -25,6 +26,7 @@ FILE* abre_archive_leitura_escrita(char *nomeArq){
     return arq;
 }
 
+/*Função que abre um arquivo apenas para leitura, se não existir retorna NULL */
 FILE* abre_archive_leitura(char *nomeArq){
     FILE *arq;
     arq = fopen(nomeArq, "r");
@@ -35,6 +37,7 @@ FILE* abre_archive_leitura(char *nomeArq){
     return arq;
 }
 
+/*Função que extrai os dados de um archive e insere na lista de diretorios */
 struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
     long int ini_dir = 0, fim = 0;
     struct nodoM *aux = NULL;
@@ -87,6 +90,7 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
     return d;
 }
 
+/*Função que insere os dados da lista de diretorio em um archive pela sua ordem */
 void insere_diretorio(struct diretorio *d, char *nomeArc){
     struct nodoM *aux = NULL;
     FILE *arc = abre_archive_leitura_escrita(nomeArc);   
@@ -115,6 +119,7 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
     return;
 }
 
+/*Função que extrai o conteudo de um arquivo com menos de 1024 bytes e insere no archive na posição atual do archive */
 int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
     char buffer[BUFFER_SIZE] = {0};
     int tam = 0;
@@ -130,6 +135,7 @@ int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
     return 0;
 }
 
+/*Função que extrai o conteudo de um arquivo com tamanho de 1024 bytes e insere no archive na posição atual do archive */
 int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
     char buffer[BUFFER_SIZE] = {0};
     for(int i = 0; i < 1024; i++){
@@ -141,6 +147,7 @@ int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
     return 0;
 }
 
+/*Função que insere conteudo na lista de diretorio e no archive */
 int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     char buffer[BUFFER_SIZE] = {0};
     int blocos = 0, resto = 0, temp;
@@ -202,6 +209,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     return 0;
 }
 
+/*Função que insere conteudo na lista de diretorio e no archive apos target*/
 void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     char buffer[BUFFER_SIZE] = {0};
     struct nodoM *aux, *novo, *temp;
@@ -383,6 +391,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
     return;
 }
 
+/*Função que apenas extrai o conteudo de um arquivo e insere no arquivo de nome correspondete */
 void extrai_conteudo_arquivo(char *arc, char *dest){
     FILE *archive, *destino;
     struct nodoM *aux = NULL;
@@ -412,6 +421,7 @@ void extrai_conteudo_arquivo(char *arc, char *dest){
     return;
 }
 
+/*Função que atualiza o conteudo de um arquivo no archive e na lista de diretorios, sua posicao permanece a mesma */
 void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     char buffer[BUFFER_SIZE] = {0};
     FILE *archive, *arquivo;
@@ -517,23 +527,22 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
     return;
 }
 
+/*Função que apenas imprime as permissoes de um arquivo */
 void imprime_permissoes(mode_t mode){
-    // Exibe as permissões do proprietário
     printf((mode & S_IRUSR) ? "r" : "-");
     printf((mode & S_IWUSR) ? "w" : "-");
     printf((mode & S_IXUSR) ? "x" : "-");
 
-    // Exibe as permissões do grupo
     printf((mode & S_IRGRP) ? "r" : "-");
     printf((mode & S_IWGRP) ? "w" : "-");
     printf((mode & S_IXGRP) ? "x" : "-");
 
-    // Exibe as permissões de outros
     printf((mode & S_IROTH) ? "r" : "-");
     printf((mode & S_IWOTH) ? "w" : "-");
     printf((mode & S_IXOTH) ? "x" : "-");
 }
 
+/*Função que apenas imprime todas as informacoes de um arquivo */
 void imprime_informacoes(struct diretorio *d, char *nomeArc){
     struct tm *time;
     struct nodoM *aux;
@@ -560,3 +569,4 @@ void imprime_informacoes(struct diretorio *d, char *nomeArc){
     fclose(arc);
     return;
 }
+
