@@ -257,21 +257,21 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             printf("teste2 = %d\n", teste);
             
             blocos = cont - 1;
-            cont = blocos + 1;
+            cont = blocos;
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, novo->localizacao + (cont - 1 - blocos), SEEK_SET);
+                    fseek(archive, novo->localizacao + (cont - blocos)*1024, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
                     fseek(archive, inicio, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
             if(blocos < 1 && resto != 0){
-                fseek(archive, d->inicio_diretorio - resto_cont, SEEK_SET);
+                fseek(archive, d->inicio_diretorio + (cont*1024) - novo->tamanho, SEEK_SET);
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, inicio + 1024 , SEEK_SET);
+                fseek(archive, inicio + cont*1024, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
             
