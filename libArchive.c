@@ -213,7 +213,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     char buffer[BUFFER_SIZE] = {0};
     struct nodoM *aux, *novo, *temp;
-    int inicio, blocos, resto, i, posicao, cont, blocos_cont, resto_cont;
+    int inicio, blocos, resto, i, cont;
     FILE *archive = NULL;
 
     archive = abre_archive_leitura_escrita(nomeArc);
@@ -231,15 +231,9 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             return;
 
         if(novo->ordem == d->fim->ordem){
-            printf("AQUI VEY\n");
             inicio = aux->prox->localizacao;
             blocos = (d->inicio_diretorio - inicio) / BUFFER_SIZE;
             resto = (d->inicio_diretorio - inicio) % BUFFER_SIZE;
-            blocos_cont = novo->tamanho / BUFFER_SIZE;
-            if(blocos_cont >= 1)
-                resto_cont = novo->tamanho % BUFFER_SIZE; 
-            else
-                resto_cont = 0;
                 
             cont = blocos + 1;
             if(blocos >= 1)
@@ -259,12 +253,8 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
             fseek(archive, 0, SEEK_END);
-            int teste = ftell(archive);
-            printf("teste = %d\n", teste);
             truncate(nomeArc, d->inicio_diretorio + 104);
             fseek(archive, 0, SEEK_END);
-            teste = ftell(archive);
-            printf("teste2 = %d\n", teste);
             
             blocos = cont - 1;
             cont = blocos;
@@ -490,10 +480,10 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
                 fread(&buffer[i], sizeof(char), 1, archive);
             }
             
-            fseek(archive, aux->localizacao + aux->tamanho + diferenca + (blocos * 1024), SEEK_SET);
+            fseek(archive, aux->localizacao + aux->tamanho + (blocos * 1024), SEEK_SET);
             fwrite(&buffer, sizeof(char), resto, archive);
         }
-        truncate("backup.txt", ftell(archive));
+        truncate(nomeArc, aux->localizacao + aux->tamanho);
     }
     arquivo = abre_archive_leitura(nomeArq);
 
