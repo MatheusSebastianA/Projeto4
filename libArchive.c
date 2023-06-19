@@ -288,16 +288,22 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
 
         if(novo->ordem == d->inicio->ordem){
             printf("AQUI VEY 2\n");
-            inicio = aux->prox->localizacao;
+            if(aux != d->fim)
+                inicio = aux->prox->localizacao;
+            else{
+                inicio = d->inicio_diretorio;
+                truncate(nomeArc, inicio);
+            }
+
             blocos = (d->inicio_diretorio - inicio) / BUFFER_SIZE;
             resto = (d->inicio_diretorio - inicio) % BUFFER_SIZE;
             cont = blocos + 1;
+            printf("RESTO:%d\n", resto);
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, d->inicio_diretorio, SEEK_SET);
-                    fseek(archive, (blocos - cont)*1024, SEEK_CUR);
+                    fseek(archive, -((cont - blocos)*1024), SEEK_END);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, novo->tamanho, SEEK_CUR);
+                    fseek(archive, -1024 + novo->tamanho, SEEK_CUR);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -310,16 +316,15 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
 
-            posicao = ftell(archive);
-            truncate(nomeArc, posicao);
             blocos = (novo->tamanho) / BUFFER_SIZE;
             resto = (novo->tamanho) % BUFFER_SIZE;
+            printf("RESTO:%d\n", resto);
             cont = blocos;
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, novo->localizacao + blocos*1024, SEEK_SET);
+                    fseek(archive, novo->localizacao + resto + (blocos - 1)*1024, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, inicio + blocos*1024, SEEK_SET);
+                    fseek(archive, aux->localizacao + aux->tamanho + resto , SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -328,19 +333,19 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, inicio, SEEK_SET);
+                fseek(archive, aux->localizacao + aux->tamanho, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
-
-            blocos = (d->inicio_diretorio - d->inicio->localizacao) / BUFFER_SIZE;
-            resto = (d->inicio_diretorio - d->inicio->localizacao) % BUFFER_SIZE;
+            
+            fseek(archive, 0, SEEK_END);
+            blocos = (ftell(archive) - (novo->localizacao + novo->tamanho)) / BUFFER_SIZE;
+            resto = (ftell(archive) - (novo->localizacao + novo->tamanho)) % BUFFER_SIZE;
             cont = blocos;
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, d->inicio->prox->localizacao + (cont - blocos*1024), SEEK_SET);
-                    fseek(archive, blocos*1024, SEEK_CUR);
+                    fseek(archive, d->inicio->prox->localizacao + (cont - blocos)*1024, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, inicio + (cont - blocos)*1024, SEEK_SET);
+                    fseek(archive, d->inicio->localizacao + (cont - blocos)*1024, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -349,9 +354,10 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, d->inicio->localizacao, SEEK_SET);
+                fseek(archive, d->inicio->localizacao + cont*1024, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
-            }
+            } 
+            truncate(nomeArc, ftell(archive) - resto);
             temp = d->inicio->prox;
             insere_diretorio_apos_target(d, nomeArq, target);
             d->inicio = temp;
@@ -359,7 +365,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             for(int j = 0; j < d->fim->ordem - 1; j++){
                 temp->prox->localizacao = temp->localizacao + temp->tamanho;
                 temp = temp->prox;
-            }
+            }   
             
             return;
 
