@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
+#include <pwd.h>
 #include "libArchive.h"
 
 #define _XOPEN_SOURCE_EXTENDED 1
@@ -512,5 +514,49 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
     fclose(archive);
     fclose(arquivo);
 
+    return;
+}
+
+void imprime_permissoes(mode_t mode){
+    // Exibe as permissões do proprietário
+    printf((mode & S_IRUSR) ? "r" : "-");
+    printf((mode & S_IWUSR) ? "w" : "-");
+    printf((mode & S_IXUSR) ? "x" : "-");
+
+    // Exibe as permissões do grupo
+    printf((mode & S_IRGRP) ? "r" : "-");
+    printf((mode & S_IWGRP) ? "w" : "-");
+    printf((mode & S_IXGRP) ? "x" : "-");
+
+    // Exibe as permissões de outros
+    printf((mode & S_IROTH) ? "r" : "-");
+    printf((mode & S_IWOTH) ? "w" : "-");
+    printf((mode & S_IXOTH) ? "x" : "-");
+}
+
+void imprime_informacoes(struct diretorio *d, char *nomeArc){
+    struct tm *time;
+    struct nodoM *aux;
+    struct passwd *pw;
+    FILE *arc;
+    arc = abre_archive_leitura_escrita(nomeArc);
+    if(arc == NULL)
+        return;
+
+    aux = d->inicio;
+
+    for(int i = d->inicio->ordem; i <= d->fim->ordem; i++){
+        pw = getpwuid(aux->uid);
+        time = localtime(&aux->data);
+        imprime_permissoes(aux->permissoes);
+        printf(" %s", pw->pw_name);
+        printf("%8ld ", aux->tamanho);
+        printf("%d-%02d-%02d %02d:%02d ", time->tm_year+1900, time->tm_mon+1, time->tm_mday, time->tm_hour, time->tm_min);
+        printf("%s\n", aux->nomeArq);
+        
+        aux = aux->prox;
+    }
+
+    fclose(arc);
     return;
 }
