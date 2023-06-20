@@ -3,42 +3,110 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <string.h>
 #include "libArchive.h"
 
 
-int main(int argc, char *argv[]){
+int main(int argc, char **argv){
+    char *nomeArquivos[TAM_NOME];
+    char *Archive = NULL;
+    int opt, i, opI = 0, opA = 0, opM = 0, opX = 0, opR = 0, opC = 0, opH = 0;
     struct diretorio *d = NULL;
-    int opt;
-    while ((opt = getopt(argc, argv, "iam:xrch")) != -1) {
+    struct nodoM *aux = NULL;
+    while ((opt = getopt(argc, argv, "i:a:m:x:r:ch")) != -1) {
         switch (opt){
             case 'i':
+                Archive = optarg;
+                for(i = 3; i < argc; i++)
+                    nomeArquivos[i - 3] = argv[i];
+                opI++;
                 break;
             case 'a':
+                Archive = optarg;
+                for(i = 3; i < argc; i++)
+                    nomeArquivos[i - 3] = argv[i];
+                opA++;
                 break;
             case 'm':
+                nomeArquivos[0] = optarg;
+                Archive = argv[3];
+                nomeArquivos[1] = argv[4];           
+                opM++;
                 break;
             case 'x':
+                Archive = optarg;
+                for(i = 3; i < argc; i++)
+                    nomeArquivos[i - 3] = argv[i];
+                opX++;
                 break;
             case 'r':
+                Archive = optarg;
+                for(i = 3; i < argc; i++)
+                    nomeArquivos[i - 3] = argv[i];
+                opR++;
                 break;
             case 'c':
+                opC++;
                 break;
             case 'h':
+                opH++;
                 break;
             default:
                 printf ("O argumento passado não é válido\n");
-	            return (1);
+	            return 1;
         }		
     }
-    
-     d = cria_diretorio();
-    recebe_diretorio(d, "backup.txt");
-    atualiza_conteudo(d, "teste1.txt", "backup.txt", insereI);
-    atualiza_conteudo(d, "teste2.txt", "backup.txt", insereI);
-    atualiza_conteudo(d, "teste4.txt", "backup.txt", insereI);
-    atualiza_conteudo(d, "teste3.txt", "backup.txt", insereI);
-    insere_diretorio(d, "backup.txt");
 
+    if(opI + opA + opM + opX + opR + opC + opH != 1){
+        printf("Os argumentos passados não são válidos, ");
+        imprime_opcoes();
+        return 1;
+    }
+
+    if(opH == 1){
+        imprime_opcoes();
+        return 0;
+    }
+
+    d = cria_diretorio();
+    recebe_diretorio(d, Archive);
+
+    if(opI == 1){
+        for(i = 0; i < argc - 3; i++)
+            atualiza_conteudo(d, nomeArquivos[i], Archive, insereI);
+        insere_diretorio(d, Archive);
+    }
+    
+    else if(opA == 1){
+        for(i = 0; i < argc - 3; i++)
+            atualiza_conteudo(d, nomeArquivos[i], Archive, insereA);
+    }
+    
+    else if(opM == 1){
+        insere_conteudo_apos_target(d, nomeArquivos[1], nomeArquivos[0], Archive, insereI);
+            insere_diretorio(d, Archive);
+    }
+
+    else if(opX == 1){
+        if(nomeArquivos[0] == NULL){
+            aux = d->inicio;
+            for(i = 0; i <= d->fim->ordem; i++){
+                extrai_conteudo_arquivo(aux->nomeArq, aux->nomeArq);
+                aux = aux->prox;
+            }
+        }
+        else
+            for(i = 0; i < argc - 3; i++)
+                extrai_conteudo_arquivo(nomeArquivos[i], nomeArquivos[i]);
+    }
+
+    else if(opX == 1){
+        /*Fazer função que exclui do archive*/
+    }
+
+    else 
+        imprime_informacoes(d, Archive);
+    
     destroi_diretorio(d);
 
     return 0;
