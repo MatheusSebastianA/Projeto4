@@ -25,10 +25,18 @@ int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive);
 
 int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
 
-void imprime_conteudo(char *nomeArq);
+void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
 
 void extrai_conteudo_arquivo(char *arc, char *dest);
 
+void remove_conteudo(struct diretorio *d, char *arc, char *arq);
+
 void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
+
+void imprime_permissoes(mode_t mode);
+
+void imprime_informacoes(struct diretorio *d, char *nomeArc);
+
+void imprime_opcoes();
 
 #endif /* libArchive.h*/
