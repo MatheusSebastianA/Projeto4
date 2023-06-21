@@ -20,12 +20,13 @@ Para a implementação desse programa, foram utilizadas duas bibliotecas, uma fo
 Para a obtenção dos valores dos arquivos, foi utilizada a biblioteca stat.h, a qual consegue extrair os dados necessários para construção de um dado dentro da lista de diretório, como data, userID, permissões, etc. Alguns valores que essa função retorna não são utilizados por conta das especificações desse trabalho.
 Todas as manipulações dentro da estrutura diretório são simples, já que as manipulações são feitas seguindo a ideia de uma fila, na qual a cada novo arquivo inserido na lista sua posição será a última, com o ponteiro para o final sendo atualizado para ele, e aumentando o valor do inicio do diretório de acordo com o novo tamanho. 
 
-A opção -i está associada a função insereI, que atualiza o nodo se ele já existir e atualiza suas propriedades. Já a opção -a atualiza apenas se o conteudo a ser inserido atualmente é mais recente que o anterior, sendo representado pela função insereA. 
-A opção -m, algum nodo já existente ou não é inserido logo após outro nodo já existente na lista, e como a lista implementada não é duplamente ligada, algumas operações são um pouco mais custosas que se fosse duplamente ligada, já que é necessario salvar os nodos para não perder pedaços da lista.
-A opção -x gera um arquivo de saída para um arquivo em específico ou para todos na lista, utilizando apenas do nome do arquivo e o conteudo dele, já que não foi especificado a necessidade de outras atribuições para essa extração, apenas nome e conteúdo idênticos. 
-A opção -r apenas remove o nodo da lista de diretórios e atualiza a ordem e o inicio do diretorio no archive. Essa remoção também seria facilitada caso a lista fosse duplamente ligada, mas como a quantidade de inserções pode ser muito grande, foi escolhido a utilização de uma lista simplesmente ligada para utilizar menos memória, já que seria necessário um ponteiro a mais para cada nodo.
-A opção -c utiliza fundamentalmente da lista de diretórios, mas foi colocada na biblioteca "libArchive.h" pois o diretorio em questão é recebido a partir de um archive já existente. 
-A opção -h é apenas orientadora, a qual não utiliza nada da biblioteca libDiretorio.h
+
+        A opção -i está associada a função insereI, que atualiza o nodo se ele já existir e atualiza suas propriedades. Já a opção -a atualiza apenas se o conteudo a ser inserido atualmente é mais recente que o anterior, sendo representado pela função insereA. 
+        A opção -m, algum nodo já existente ou não é inserido logo após outro nodo já existente na lista, e como a lista implementada não é duplamente ligada, algumas operações são um pouco mais custosas que se fosse duplamente ligada, já que é necessario salvar os nodos para não perder pedaços da lista.
+        A opção -x gera um arquivo de saída para um arquivo em específico ou para todos na lista, utilizando apenas do nome do arquivo e o conteudo dele, já que não foi especificado a necessidade de outras atribuições para essa extração, apenas nome e conteúdo idênticos. 
+        A opção -r apenas remove o nodo da lista de diretórios e atualiza a ordem e o inicio do diretorio no archive. Essa remoção também seria facilitada caso a lista fosse duplamente ligada, mas como a quantidade de inserções pode ser muito grande, foi escolhido a utilização de uma lista simplesmente ligada para utilizar menos memória, já que seria necessário um ponteiro a mais para cada nodo.
+        A opção -c utiliza fundamentalmente da lista de diretórios, mas foi colocada na biblioteca "libArchive.h" pois o diretorio em questão é recebido a partir de um archive já existente. 
+        A opção -h é apenas orientadora, a qual não utiliza nada da biblioteca libDiretorio.h
 
 Algumas funções auxiliares da libDiretorio devem ser destacadas:
 
