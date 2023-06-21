@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "libDiretorio.h"
 
+/*Função que cria a estrutura diretorio */
 struct diretorio* cria_diretorio(){
     struct diretorio *d;
 
@@ -19,6 +20,7 @@ struct diretorio* cria_diretorio(){
     return d;
 }
 
+/*Função que compara dois caracteres */
 int compara_caractere(char c1, char c2){
     if(c1 == c2)
         return 1;
@@ -26,6 +28,7 @@ int compara_caractere(char c1, char c2){
     return 0;
 }
 
+/*Função que compara dois nomes */
 int compara_nome(char *s1, char *s2, int cont){
     int tamanho_s1 = strlen(s1);
     int tamanho_s2 = strlen(s2);
@@ -42,6 +45,7 @@ int compara_nome(char *s1, char *s2, int cont){
     return 0;
 }
 
+/*Função que verifica se o arquivo existe na estrutura de diretorios, se existir retorna ele se não retorna NULL */
 struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
     struct nodoM *aux = NULL;
         
@@ -60,6 +64,7 @@ struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
     return NULL;
 }
 
+/*Função que recebe os conteudos de um arquivo, como nome, data, tamanho, etc. */
 struct nodoM* conteudo(struct nodoM *nodo, char *nomeArq){
     struct stat *aux;
     if(!(aux = malloc(sizeof(struct stat))))
@@ -77,12 +82,14 @@ struct nodoM* conteudo(struct nodoM *nodo, char *nomeArq){
     return nodo;
 }
 
+/*Função que sempre atualiza o conteudo de um arquivo */
 struct nodoM* insereI(struct nodoM *nodo, char *nomeArq){
     nodo = conteudo(nodo, nomeArq);
 
     return nodo;
 }
 
+/*Função que atualiza o conteudo de um arquivo apenas se a data do atual for menor que a do anterior */
 struct nodoM* insereA(struct nodoM *nodo, char *nomeArq){
     struct stat *compara;
     compara = malloc(sizeof(struct stat));
@@ -94,6 +101,7 @@ struct nodoM* insereA(struct nodoM *nodo, char *nomeArq){
     return nodo;
 }
 
+/*Função que insere na estrutura diretorio os nodos e suas informações */
 struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
     struct nodoM *aux = NULL;
     
@@ -135,6 +143,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     return d->fim;
 }
 
+/*Função que insere o nodo de um arquivo logo após o target passado, se não existe é adicionado, se já existe é apenas movido */
 int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *target){
     struct nodoM *aux, *novo, *temp, *temp2, *anterior;
     
@@ -151,7 +160,6 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
             return 1;
 
         if(novo->ordem == d->fim->ordem){
-            printf("TO AQUI PAE 1\n");
             temp = aux->prox;
             anterior = d->inicio;
 
@@ -177,7 +185,6 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
         }
 
         if(novo->ordem == d->inicio->ordem){
-            printf("TO AQUI PAE 2\n");
             d->inicio = novo->prox;
             temp = aux->prox;
             anterior = d->inicio;
@@ -200,7 +207,6 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
         }
         
         if(novo->ordem > aux->ordem){
-            printf("TO AQUI PAE 3\n");
             int ordem = novo->ordem;
             temp = aux->prox;
             aux->prox = novo;
@@ -219,7 +225,6 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
         }
 
         if(novo->ordem < aux->ordem){
-            printf("TO AQUI PAE 4\n");
             temp = aux->prox;
             aux->prox = novo;
             anterior = d->inicio;
@@ -274,6 +279,79 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
     return 0;
 }
 
+/*Função que remove um arquivo do diretório */
+int remove_arquivo_diretorio(struct diretorio *d, char *nomeArc, char *nomeArq){
+    int tam, ordem;
+    struct nodoM *aux = NULL, *temp = NULL, *anterior = NULL;
+
+    aux = existe_arq(d, nomeArq);
+    if(aux == NULL)
+        return 1;
+
+    else if(aux == d->inicio){
+        d->inicio = d->inicio->prox;
+        int tam = aux->tamanho;
+        temp = d->inicio;
+
+        for(int i = d->inicio->ordem; i <= d->fim->ordem; i++){
+            temp->ordem = temp->ordem - 1;
+            temp->localizacao = temp->localizacao - tam;
+            
+            temp = temp->prox;
+        }
+
+        d->inicio_diretorio = d->inicio_diretorio - tam;
+        
+        free(aux);
+        return 0;
+    }
+
+    else if(aux == d->fim){
+        anterior = d->inicio;
+        tam = aux->tamanho;
+        ordem = aux->ordem;
+
+        while(anterior->prox != aux){
+            anterior = anterior->prox;
+        }
+        
+    
+        d->fim = anterior;
+        d->fim->prox = NULL;
+        d->inicio_diretorio = d->inicio_diretorio - tam;
+
+        free(aux);    
+        return 0;
+    }
+
+    else{
+        anterior = d->inicio;
+        temp = aux->prox;
+
+        while(anterior->prox != aux){
+            anterior = anterior->prox;
+        }
+        anterior->prox = temp;
+        tam = aux->tamanho;
+        ordem = aux->ordem;
+    
+        
+
+        for(int i = ordem; i <= d->fim->ordem; i++){
+            temp->ordem = temp->ordem - 1;
+            temp->localizacao = temp->localizacao - tam;
+            
+            temp = temp->prox;
+        }
+
+        free(aux);
+        return 0;
+    }
+    
+    return 0;
+}
+
+/*Função auxiliar que diz se um diretorio está vazio */
 int diretorio_vazio(struct diretorio *d){
     if(d->inicio == NULL)
         return 1;
@@ -281,6 +359,7 @@ int diretorio_vazio(struct diretorio *d){
     return 0;
 }
 
+/*Função auxiliar que imprime um diretorio com apenas informações consideradas importantes para depuração */
 void imprime_diretorio(struct diretorio *d){
     if(diretorio_vazio(d)){
         printf("Diretorio vazio\n");
@@ -302,8 +381,12 @@ void imprime_diretorio(struct diretorio *d){
     return;
 }
 
+/*Função que libera a memória alocada pelo diretório */
 void destroi_diretorio(struct diretorio *d){
     struct nodoM *aux = NULL;
+
+    if(d == NULL)
+        return;
 
     if(diretorio_vazio(d)){
         free(d->inicio);
