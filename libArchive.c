@@ -303,7 +303,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 for(blocos = blocos; blocos > 0; blocos--){
                     fseek(archive, -((cont - blocos)*1024), SEEK_END);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, -1024 + novo->tamanho, SEEK_CUR);
+                    fseek(archive, -1024*blocos + novo->tamanho, SEEK_CUR);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -357,7 +357,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 fseek(archive, d->inicio->localizacao + cont*1024, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             } 
-            truncate(nomeArc, ftell(archive) - resto);
+            truncate(nomeArc, d->inicio_diretorio);
             temp = d->inicio->prox;
             insere_diretorio_apos_target(d, nomeArq, target);
             d->inicio = temp;
@@ -365,7 +365,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             for(int j = 0; j < d->fim->ordem - 1; j++){
                 temp->prox->localizacao = temp->localizacao + temp->tamanho;
                 temp = temp->prox;
-            }   
+            }
             
             return;
 
@@ -386,8 +386,7 @@ void extrai_conteudo_arquivo(char *arc, char *dest){
     FILE *archive, *destino;
     struct nodoM *aux = NULL;
     struct diretorio *b = cria_diretorio();
-    recebe_diretorio(b, "backup.txt");
-    imprime_diretorio(b);
+    recebe_diretorio(b, arc);
 
     aux = existe_arq(b, dest);
     if(aux == NULL)
@@ -408,6 +407,77 @@ void extrai_conteudo_arquivo(char *arc, char *dest){
     if(blocos < 1 && resto != 0)
         insere_conteudo_menor1024(aux, archive, destino);
 
+    return;
+}
+
+/*Função que remove o conteudo de um arquivo no archive e na lista de diretorios. */
+void remove_conteudo(struct diretorio *d, char *arc, char *arq){
+    char buffer[BUFFER_SIZE] = {0};
+    int inicio, tam, blocos, resto, i, cont;
+    struct nodoM *aux = NULL, *temp = NULL, *anterior = NULL;
+    FILE* archive = NULL;
+
+    archive = abre_archive_leitura_escrita(arc);
+    if(archive == NULL){
+        printf("Erro ao abrir %s\n", arc);
+        return;
+    }
+
+    aux = existe_arq(d, arq);
+    if(aux == NULL){
+        printf("O arquivo %s não está no Archive\n", arc);
+        return;
+    }
+        
+    truncate(arc, d->inicio_diretorio);
+
+    if(aux == d->inicio && aux == d->fim){
+        destroi_diretorio(d);
+        truncate(arc, 0);
+        return;
+    }
+
+    else if(aux == d->inicio){
+        inicio = aux->prox->localizacao;
+        tam = d->inicio_diretorio - aux->prox->localizacao;
+
+        fseek(archive, d->inicio->localizacao, SEEK_SET);
+        blocos = tam / BUFFER_SIZE;
+        resto = tam % BUFFER_SIZE;
+        cont = blocos;
+        if(blocos >= 1)
+            for(blocos = blocos; blocos > 0; blocos--){
+                fseek(archive, inicio + ((cont - blocos)*1024), SEEK_SET);
+                fread(buffer, sizeof(char), BUFFER_SIZE, archive);
+                fseek(archive, sizeof(long int) + ((cont - blocos)*1024), SEEK_SET);
+                fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
+            } 
+
+        if(blocos < 1 && resto != 0){
+            fseek(archive, aux->prox->localizacao + cont*1024, SEEK_SET);
+            for(i = 0; i < resto; i++){
+                fread(&buffer[i], sizeof(char), 1, archive);
+            }
+            fseek(archive, aux->localizacao + cont*1024, SEEK_SET);
+            fwrite(&buffer, sizeof(char), resto, archive);
+        } 
+
+        truncate(arc, d->inicio_diretorio - aux->tamanho);
+        remove_arquivo_diretorio(d, arc, arq);
+
+        return;
+    }
+
+    else if(aux == d->fim){
+        
+        return;
+    }
+
+    else{
+        
+        return;
+    }
+    
     return;
 }
 
@@ -557,5 +627,18 @@ void imprime_informacoes(struct diretorio *d, char *nomeArc){
     }
 
     fclose(arc);
+    return;
+}
+
+void imprime_opcoes(){
+    printf("Opções disponíveis:\n");
+    printf("./vina++ -i  <archive> [membro1 membro2 ...]\n");
+    printf("./vina++ -a  <archive> [membro1 membro2 ...]\n");
+    printf("./vina++ -m  [target] <archive> [membroX]\n");
+    printf("./vina++ -x  [membro1 membro2 ...] | vina++ -x\n");
+    printf("./vina++ -r  <archive> [membro1 membro2 ...]\n");
+    printf("./vina++ -c  <archive>\n");
+    printf("./vina++ -h\n");
+
     return;
 }
