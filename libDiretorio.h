@@ -44,7 +44,9 @@ struct nodoM* insereA(struct nodoM *nodo, char *nomeArq);
 
 struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
 
-int insere_apos_target(struct diretorio *d, char *nomeArq, char *target);
+int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *target);
+
+int remove_arquivo_diretorio(struct diretorio *d, char *nomeArc, char *nomeArq);
 
 int diretorio_vazio(struct diretorio *d);
     
