@@ -13,8 +13,6 @@ FILE* abre_archive_leitura_escrita(char *nomeArq);
 
 FILE* abre_archive_leitura(char *nomeArq);
 
-void insere_diretorio_lista(struct diretorio *d, struct nodoM *aux);
-
 struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc);
 
 void insere_diretorio(struct diretorio *d, char *nomeArc);
