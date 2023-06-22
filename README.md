@@ -4,7 +4,8 @@ Aluno: Matheus Sebastian Alencar de Carvalho. GRR20220065
 
 Objetivo: é implementar o programa vina++1, que consiste de um arquivador básico (archiver), isto é, um programa que salva em sequência uma coleção de arquivos (denominados membros) dentro de outro arquivo (denominado archive) cuja estrutura permite recuperar os arquivos originais individualmente.
 
-Para a implementação desse programa, foram utilizadas duas bibliotecas, uma focada na lista de diretórios e a outra na manipulação do archive. Na "libDiretorio.h", foi utilizada uma lista ligada simples, com um ponteiro para o incio, um para o fim e um long int que representa o valor de inicio do diretorio no Archive. Cada nodo dessa lista apresenta uma estrutura específica, sendo ela:
+Para a implementação desse programa, foram utilizadas duas bibliotecas, uma focada na lista de diretórios e a outra na manipulação do archive.
+Na "libDiretorio.h", foi utilizada uma lista ligada simples, com um ponteiro para o incio, um para o fim e um long int que representa o valor de inicio do diretorio no Archive. Cada nodo dessa lista apresenta uma estrutura específica, sendo ela:
 
 
     Nome do arquivo, com no máximo 63 caracteres: char nomeArq[TAM_NOME];
@@ -35,3 +36,5 @@ Algumas funções auxiliares da libDiretorio devem ser destacadas:
     Diretorio_vazio(struct diretorio *d): verifica se o diretório está vazio;
     Destroi_diretorio(struct diretorio *d): Libera memória alocada para a estrutura;
     Imprime_diretorio(struct diretorio *d): Função para depuração própria, não utilizada diretamente no programa.
+
+A "libArchive.h" apresenta funções focadas na manipulação dos arquivos binários em si, como a abertura para leitura e escrita e apenas leitura. Como não foi demonstrado nos exemplos casos de erro, casos de erro não resultam em mensagens específicas na rodagem do programa, apenas terminam a execução do programa. 
