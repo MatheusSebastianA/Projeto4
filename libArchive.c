@@ -97,6 +97,9 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
 
     if(!arc)
         return;
+
+    if(diretorio_vazio(d))
+        return;
         
     aux = d->inicio;
     fseek(arc, d->inicio_diretorio, SEEK_SET);
@@ -418,16 +421,14 @@ void remove_conteudo(struct diretorio *d, char *arc, char *arq){
     FILE* archive = NULL;
 
     archive = abre_archive_leitura_escrita(arc);
-    if(archive == NULL){
-        printf("Erro ao abrir %s\n", arc);
+    if(archive == NULL)
         return;
-    }
+    
 
     aux = existe_arq(d, arq);
-    if(aux == NULL){
-        printf("O arquivo %s não está no Archive\n", arc);
+    if(aux == NULL)
         return;
-    }
+    
         
     truncate(arc, d->inicio_diretorio);
 
