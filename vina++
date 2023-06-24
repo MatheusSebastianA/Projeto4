@@ -13,18 +13,12 @@ int main(int argc, char **argv){
     int opt, i, opI = 0, opA = 0, opM = 0, opX = 0, opR = 0, opC = 0, opH = 0;
     struct diretorio *d = NULL;
     struct nodoM *aux = NULL;
-    while ((opt = getopt(argc, argv, "i:a:m:x:r:c:h")) != -1) {
+    while ((opt = getopt(argc, argv, "iam:xrch")) != -1) {
         switch (opt){
             case 'i':
-                Archive = optarg;
-                for(i = 3; i < argc; i++)
-                    nomeArquivos[i - 3] = argv[i];
                 opI++;
                 break;
             case 'a':
-                Archive = optarg;
-                for(i = 3; i < argc; i++)
-                    nomeArquivos[i - 3] = argv[i];
                 opA++;
                 break;
             case 'm':
@@ -34,15 +28,9 @@ int main(int argc, char **argv){
                 opM++;
                 break;
             case 'x':
-                Archive = optarg;
-                for(i = 3; i < argc; i++)
-                    nomeArquivos[i - 3] = argv[i];
                 opX++;
                 break;
             case 'r':
-                Archive = optarg;
-                for(i = 3; i < argc; i++)
-                    nomeArquivos[i - 3] = argv[i];
                 opR++;
                 break;
             case 'c':
@@ -72,45 +60,59 @@ int main(int argc, char **argv){
     d = cria_diretorio();
     recebe_diretorio(d, Archive);
 
-    if(opI == 1){
+    if(opI == 1 && argc > 3){
+        Archive = argv[3];
+        for(i = 3; i < argc; i++)
+            nomeArquivos[i - 3] = argv[i];
+
         for(i = 0; i < argc - 3; i++)
             atualiza_conteudo(d, nomeArquivos[i], Archive, insereI);
     }
     
-    else if(opA == 1){
-        for(i = 0; i < argc - 3; i++)
-            atualiza_conteudo(d, nomeArquivos[i], Archive, insereA);
+    else if(opA == 1 && argc > 3){
+        Archive = argv[3];
+            for(i = 3; i < argc; i++){
+                nomeArquivos[i - 3] = argv[i];
+                atualiza_conteudo(d, nomeArquivos[i], Archive, insereA);
+            }
     }
     
-    else if(opM == 1){
-        insere_conteudo_apos_target(d, nomeArquivos[1], nomeArquivos[0], Archive, insereI);
+    else if(opM == 1 && argc > 3){
+        insere_conteudo_apos_target(d, nomeArquivos[1], nomeArquivos[0], Archive);
         
     }
 
     else if(opX == 1){
-        if(nomeArquivos[0] == NULL){
+        if(argc == 3){
+            Archive = argv[3];
             aux = d->inicio;
             for(i = 0; i <= d->fim->ordem; i++){
-                extrai_conteudo_arquivo(aux->nomeArq, aux->nomeArq);
+                extrai_conteudo_arquivo(d, Archive, aux->nomeArq);
                 aux = aux->prox;
             }
         }
-        else
-            for(i = 0; i < argc - 3; i++)
-                extrai_conteudo_arquivo(nomeArquivos[i], nomeArquivos[i]);
+        else{
+            Archive = argv[3];
+            for(i = 3; i < argc; i++){
+                nomeArquivos[i - 3] = argv[i];
+                extrai_conteudo_arquivo(d, Archive, nomeArquivos[i]);
+            }
+        }
     }
 
-    else if(opR == 1){
-        for(i = 0; i < argc - 3; i++)
-            remove_conteudo(d, Archive, nomeArquivos[i]);
-        /*Fazer função que exclui do archive*/
+    else if(opR == 1 && argc > 3){
+        Archive = argv[3];
+            for(i = 3; i < argc; i++){
+                nomeArquivos[i - 3] = argv[i];
+                remove_conteudo(d, Archive, nomeArquivos[i]);
+            }
     }
 
     else if(opC == 1)
         imprime_informacoes(d, Archive);
 
-    insere_diretorio(d, Archive);
-    
+    insere_diretorio(d, Archive); 
+    destroi_diretorio(d);
 
     return 0;
 }
