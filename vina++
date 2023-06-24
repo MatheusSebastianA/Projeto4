@@ -61,19 +61,18 @@ int main(int argc, char **argv){
     recebe_diretorio(d, Archive);
 
     if(opI == 1 && argc > 3){
-        Archive = argv[3];
-        for(i = 3; i < argc; i++)
+        Archive = argv[2];
+        for(i = 3; i < argc; i++){
             nomeArquivos[i - 3] = argv[i];
-
-        for(i = 0; i < argc - 3; i++)
-            atualiza_conteudo(d, nomeArquivos[i], Archive, insereI);
+            atualiza_conteudo(d, nomeArquivos[i - 3], Archive, insereI);
+        }
     }
     
     else if(opA == 1 && argc > 3){
-        Archive = argv[3];
+        Archive = argv[2];
         for(i = 3; i < argc; i++){
             nomeArquivos[i - 3] = argv[i];
-            atualiza_conteudo(d, nomeArquivos[i], Archive, insereA);
+            atualiza_conteudo(d, nomeArquivos[i - 3], Archive, insereA);
         }
     }
     
@@ -84,7 +83,7 @@ int main(int argc, char **argv){
 
     else if(opX == 1){
         if(argc == 3){
-            Archive = argv[3];
+            Archive = argv[2];
             aux = d->inicio;
             for(i = 0; i <= d->fim->ordem; i++){
                 extrai_conteudo_arquivo(d, Archive, aux->nomeArq);
@@ -92,19 +91,19 @@ int main(int argc, char **argv){
             }
         }
         else{
-            Archive = argv[3];
+            Archive = argv[2];
             for(i = 3; i < argc; i++){
                 nomeArquivos[i - 3] = argv[i];
-                extrai_conteudo_arquivo(d, Archive, nomeArquivos[i]);
+                extrai_conteudo_arquivo(d, Archive, nomeArquivos[i - 3]);
             }
         }
     }
 
     else if(opR == 1 && argc > 3){
-        Archive = argv[3];
+        Archive = argv[2];
         for(i = 3; i < argc; i++){
             nomeArquivos[i - 3] = argv[i];
-            remove_conteudo(d, Archive, nomeArquivos[i]);
+            remove_conteudo(d, Archive, nomeArquivos[i - 3]);
         }
     }
 
