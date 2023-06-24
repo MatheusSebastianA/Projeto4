@@ -154,6 +154,10 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
     
     novo = existe_arq(d, nomeArq);
 
+    if(novo == NULL)
+        return 1;
+    
+
     if(novo != NULL){
         
         if(aux->prox == novo)
@@ -170,17 +174,20 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
             anterior->prox = novo->prox;
             aux->prox = novo;
             novo->prox = temp;
-
+            
             int i = 0;
             aux = d->inicio;
             while(aux->prox != NULL){
                 aux->ordem = i;
+                aux->prox->localizacao = aux->localizacao + aux->tamanho; 
                 aux = aux->prox;
                 i++;
             }
             aux->ordem = i;
             d->fim = aux;
             d->fim->prox = NULL;
+
+            
             return 0;
         }
 
@@ -192,9 +199,11 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
             novo->prox = temp;
 
             int i = 0;
+            d->inicio->localizacao = sizeof(long int);
             aux = d->inicio;
             while(aux->prox != NULL){
                 aux->ordem = i;
+                aux->prox->localizacao = aux->localizacao + aux->tamanho; 
                 aux = aux->prox;
                 i++;
             }
@@ -254,28 +263,7 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
 
     }
 
-    if(!(novo = malloc(sizeof(struct nodoM))))
-        return 1;
-
-    if(aux->prox == NULL){
-        strcpy(novo->nomeArq, nomeArq);
-        novo = conteudo(novo, nomeArq);
-        novo->tam_nome = strlen(nomeArq);
-        novo->ordem = aux->ordem + 1;
-        novo->prox = NULL;
-        aux->prox = novo;
-        d->fim = novo;
-        return 0;
-    }
-
-    temp = aux->prox;
-    strcpy(novo->nomeArq, nomeArq);
-    novo = conteudo(novo, nomeArq);
-    novo->tam_nome = strlen(nomeArq);
-    novo->ordem = aux->ordem + 1;
-    aux->prox = novo;
-    novo->prox = temp;
-
+    
     return 0;
 }
 
@@ -287,6 +275,12 @@ int remove_arquivo_diretorio(struct diretorio *d, char *nomeArc, char *nomeArq){
     aux = existe_arq(d, nomeArq);
     if(aux == NULL)
         return 1;
+    
+    if(aux == d->inicio && aux == d->fim){
+        d->inicio = NULL;
+        d->inicio_diretorio = 0;
+        return 0;  
+    }
 
     else if(aux == d->inicio){
         d->inicio = d->inicio->prox;
@@ -344,6 +338,8 @@ int remove_arquivo_diretorio(struct diretorio *d, char *nomeArc, char *nomeArq){
             temp = temp->prox;
         }
 
+        d->inicio_diretorio = d->inicio_diretorio - tam;
+        
         free(aux);
         return 0;
     }
