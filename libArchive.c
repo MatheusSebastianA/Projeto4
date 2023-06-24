@@ -315,7 +315,6 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             blocos = (d->inicio_diretorio - inicio) / BUFFER_SIZE;
             resto = (d->inicio_diretorio - inicio) % BUFFER_SIZE;
             cont = blocos + 1;
-            printf("RESTO:%d\n", resto);
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
                     fseek(archive, inicio + blocos*1024, SEEK_SET);
@@ -336,7 +335,6 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             /*bloco para colocar o conteúdo no novo local*/
             blocos = (novo->tamanho) / BUFFER_SIZE;
             resto = (novo->tamanho) % BUFFER_SIZE;
-            printf("RESTO:%d\n", resto);
             cont = blocos + 1;
             if(aux->prox == NULL)
                 loc = d->inicio_diretorio;
