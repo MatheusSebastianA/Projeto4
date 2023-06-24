@@ -204,7 +204,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     temp = blocos;
     if(blocos >= 1)
         for(blocos = blocos; blocos > 0; blocos--){
-            fseek(arq, 0, SEEK_SET);
+            fseek(arq, 0 + (temp - blocos)*1024, SEEK_SET);
             fread(buffer, sizeof(char), BUFFER_SIZE, arq);
             fseek(arc, d->inicio_diretorio - aux->tamanho + (temp - blocos)*1024, SEEK_SET);
             fwrite(buffer, sizeof(char), BUFFER_SIZE, arc); 
@@ -222,7 +222,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
 }
 
 /*Função que insere conteudo na lista de diretorio e no archive apos target*/
-void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq)){
+void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc){
     char buffer[BUFFER_SIZE] = {0};
     struct nodoM *aux, *novo, *temp;
     int inicio, blocos, resto, i, cont;
