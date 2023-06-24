@@ -57,8 +57,7 @@ int main(int argc, char **argv){
     }
 
     d = cria_diretorio();
-    if(opM != 1)
-        Archive = argv[2];
+    Archive = argv[2];
     recebe_diretorio(d, Archive);
 
     if(opI == 1 && argc > 3){
