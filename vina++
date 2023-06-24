@@ -56,11 +56,15 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    d = cria_diretorio();
-    Archive = argv[2];
-    recebe_diretorio(d, Archive);
+    else if(opM == 1 && argc > 3){
+        d = cria_diretorio();
+        recebe_diretorio(d, Archive);
+        insere_conteudo_apos_target(d, nomeArquivos[1], nomeArquivos[0], Archive);   
+    }
 
-    if(opI == 1 && argc > 3){
+    else if(opI == 1 && argc > 3){
+        d = cria_diretorio();
+        recebe_diretorio(d, Archive);
         Archive = argv[2];
         for(i = 3; i < argc; i++){
             nomeArquivos[i - 3] = argv[i];
@@ -69,19 +73,18 @@ int main(int argc, char **argv){
     }
     
     else if(opA == 1 && argc > 3){
+        d = cria_diretorio();
+        recebe_diretorio(d, Archive);
         Archive = argv[2];
         for(i = 3; i < argc; i++){
             nomeArquivos[i - 3] = argv[i];
             atualiza_conteudo(d, nomeArquivos[i - 3], Archive, insereA);
         }
     }
-    
-    else if(opM == 1 && argc > 3){
-        insere_conteudo_apos_target(d, nomeArquivos[1], nomeArquivos[0], Archive);
-        
-    }
 
     else if(opX == 1){
+        d = cria_diretorio();
+        recebe_diretorio(d, Archive);
         if(argc == 3){
             Archive = argv[2];
             aux = d->inicio;
@@ -100,6 +103,8 @@ int main(int argc, char **argv){
     }
 
     else if(opR == 1 && argc > 3){
+        d = cria_diretorio();
+        recebe_diretorio(d, Archive);
         Archive = argv[2];
         for(i = 3; i < argc; i++){
             nomeArquivos[i - 3] = argv[i];
@@ -108,6 +113,8 @@ int main(int argc, char **argv){
     }
 
     else if(opC == 1){
+        d = cria_diretorio();
+        recebe_diretorio(d, Archive);
         Archive = argv[2];
         imprime_informacoes(d, Archive);
     }
