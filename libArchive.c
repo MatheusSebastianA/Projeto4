@@ -18,7 +18,7 @@ FILE* abre_archive_leitura_escrita(char *nomeArq){
     arq = fopen(nomeArq, "r+b");
 
     if(arq == NULL)
-        arq = fopen(nomeArq, "wb");
+        arq = fopen(nomeArq, "wb"); /* Significa que o arquivo não existe e será criado */
 
     if(arq == NULL)
         return NULL;
@@ -53,6 +53,7 @@ struct diretorio* recebe_diretorio(struct diretorio *d, char *nomeArc){
     fim = ftell(arc);
     fseek(arc, ini_dir, SEEK_SET);
     
+    /* Vai do final do arquivo até a última coisa que foi lida, se ainda tiver algo para ler é porque ainda tem nodos do diretório */
     while(fim - ftell(arc) != 0){
         if(!(aux = malloc(sizeof(struct nodoM))))
             return NULL;
@@ -107,6 +108,7 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
     aux = d->inicio;
     fseek(arc, d->inicio_diretorio, SEEK_SET);
 
+    /* Laço que insere todos os nodos do diretório na posição do inicio do diretório */
     for(int i = 0; i <= d->fim->ordem; i++){
         fwrite(&aux->tam_nome, sizeof(int), 1, arc);
         fwrite(aux->nomeArq, sizeof(char), aux->tam_nome, arc);
@@ -125,7 +127,8 @@ void insere_diretorio(struct diretorio *d, char *nomeArc){
     return;
 }
 
-/*Função que extrai o conteudo de um arquivo com menos de 1024 bytes e insere no archive na posição atual do archive */
+/*Função que extrai o conteudo de um arquivo com menos de 1024 bytes e insere no archive na posição atual do archive. 
+Essa função não utilizada todas as vezes pois alguns parâmetros que teriam que ser passados como SEEK_CUR/SEEK_END/SEEK_SET e posição confundiriam */
 int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
     char buffer[BUFFER_SIZE] = {0};
     int tam = 0;
@@ -141,7 +144,8 @@ int insere_conteudo_menor1024(struct nodoM *nodo, FILE *arq, FILE *archive){
     return 0;
 }
 
-/*Função que extrai o conteudo de um arquivo com tamanho de 1024 bytes e insere no archive na posição atual do archive */
+/*Função que extrai o conteudo de um arquivo com tamanho de 1024 bytes e insere no archive na posição atual do archive 
+Essa função não utilizada todas as vezes pois alguns parâmetros que teriam que ser passados como SEEK_CUR/SEEK_END/SEEK_SET e posição confundiriam */
 int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive){
     char buffer[BUFFER_SIZE] = {0};
     for(int i = 0; i < BUFFER_SIZE; i++){
@@ -160,11 +164,12 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     FILE *arq = NULL, *arc = NULL;
     struct nodoM *aux = NULL;
 
+    /* Verifica se o nome tem /, se tiver é necessário adicionar . no começo do nome */
     if(nome_barra(nomeArq) == 1){
         arq = abre_archive_leitura(nomeArq);
         if(arq == NULL){
-            printf("O arquivo %s não existe\n", nomeArq);
-            return 1;
+            fprintf(stderr, "O arquivo %s não existe\n", nomeArq);
+            exit (1);
         }
     }
 
@@ -172,19 +177,20 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     else{
         arq = abre_archive_leitura(nomeArq);
         if(arq == NULL){
-            printf("O arquivo %s não existe\n", nomeArq);
-            return 1;
+            fprintf(stderr, "O arquivo %s não existe\n", nomeArq);
+            exit (1);
         }
     }
     
     arc = abre_archive_leitura_escrita(nomeArc);   
     if(arc == NULL){
-        printf("O archive %s não foi aberto corretamente\n", nomeArc);
+        fprintf(stderr, "O archive %s não foi aberto corretamente\n", nomeArc);
         fclose(arq);
-        return 1;
+        exit (1);
     }
 
     if(diretorio_vazio(d)){
+        /* Esse bloco representa que o conteúdo a ser inserido será o primeiro do archive */
         d->inicio = insere(d, nomeArq, func);
         fseek(arc, 0, SEEK_SET);
         fwrite(&d->inicio_diretorio, sizeof(long int), 1, arc);
@@ -204,6 +210,7 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
         return 0;
     }
     
+    /* A partir daqui, significa que o archive não era vazio antes dessa inserção e será inserido tanto no diretorio quanto no archive  */
     insere(d, nomeArq, func);
     aux = d->fim;
     fseek(arc, 0, SEEK_SET);
@@ -241,29 +248,31 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
 
     archive = abre_archive_leitura_escrita(nomeArc);
     if(archive == NULL){
-        printf("O archive %s não foi aberto corretamente\n", nomeArc);
-        return;
+        fprintf(stderr,  "O archive %s não foi aberto corretamente\n", nomeArc);
+        exit (1);
     }
         
 
     aux = existe_arq(d, target);
     if(aux == NULL){
-        printf("O target %s não está no archive\n", target);
-        return;
+        fprintf(stderr,  "O target %s não está no archive\n", target);
+        exit (1);
     }
 
     novo = existe_arq(d, nomeArq);
 
     if(novo == NULL){
-        printf("O arquivo %s não está no archive\n", nomeArq);
-        return;
+        fprintf(stderr, "O arquivo %s não está no archive\n", nomeArq);
+        exit (1);
     }
 
     if(novo != NULL){
+        /* Se o arquivo a ser movimentado já está depois do target não faz nada */
         if(aux->prox == novo)
             return;
-        /*bloco para colocar o conteúdo para frente do nodo que será mudado de posição*/
+        
         if(novo->ordem == d->fim->ordem){
+            /*bloco para colocar o conteúdo para frente do nodo que será mudado de posição*/
             inicio = aux->prox->localizacao;
             blocos = (novo->localizacao - inicio) / BUFFER_SIZE;
             resto = (novo->localizacao - inicio) % BUFFER_SIZE;  
@@ -399,7 +408,6 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
 
         if(novo->ordem > aux->ordem){
             /*bloco para colocar todo o conteúdo após o target para frente em novo->tamanho posições (abrir espaço para o novo conteudo)*/
-            int tam_entre = novo->localizacao - aux->localizacao;
             inicio = aux->prox->localizacao;
             blocos = (d->inicio_diretorio - inicio) / BUFFER_SIZE;
             resto = (d->inicio_diretorio - inicio) % BUFFER_SIZE;
@@ -423,8 +431,6 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
 
             /*bloco para colocar o conteudo no novo lugar*/
             blocos = (novo->tamanho) / BUFFER_SIZE;
-            printf("LOCOS: %d\n", blocos);
-            printf("Resto novo: %d\n", resto);
             
             resto = (novo->tamanho) % BUFFER_SIZE;
             cont = blocos + 1;
@@ -510,27 +516,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 for(blocos = blocos; blocos > 0; blocos--){
                     fseek(archive, d->inicio_diretorio - (cont - blocos)*BUFFER_SIZE, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, novo->tamanho, SEEK_CUR);
-                    fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
-                }
-
-            if(blocos < 1 && resto != 0){
-                fseek(archive, d->inicio_diretorio - resto - (cont - 1)*BUFFER_SIZE , SEEK_SET);
-                for(i = 0; i < resto; i++){
-                    fread(&buffer[i], sizeof(char), 1, archive);
-                }
-                fseek(archive, inicio + novo->tamanho, SEEK_SET);
-                fwrite(&buffer, sizeof(char), resto, archive);
-            }
-
-            blocos = novo->tamanho / BUFFER_SIZE;
-            resto =  novo->tamanho % BUFFER_SIZE;
-            cont = blocos + 1;
-            if(blocos >= 1)
-                for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, d->inicio_diretorio - (cont - blocos)*BUFFER_SIZE, SEEK_SET);
-                    fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, novo->tamanho, SEEK_CUR);
+                    fseek(archive, d->inicio_diretorio - (cont - blocos)*BUFFER_SIZE + novo->tamanho, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -547,16 +533,12 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             blocos = (novo->tamanho) / BUFFER_SIZE;
             resto = (novo->tamanho) % BUFFER_SIZE;
             cont = blocos + 1;
-            if(aux->prox == NULL)
-                loc = d->inicio_diretorio;
-            else
-                loc = aux->prox->localizacao;
 
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
                     fseek(archive, novo->localizacao + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, loc + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive, inicio + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -565,34 +547,33 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, loc + (cont-1)*BUFFER_SIZE, SEEK_SET);
+                fseek(archive, inicio + (cont-1)*BUFFER_SIZE, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
 
             /*bloco para puxar todo o conteudo a partir do target (novo->tamanho) posições*/
             blocos = (d->inicio_diretorio - aux->prox->localizacao) / BUFFER_SIZE;
             resto = (d->inicio_diretorio - aux->prox->localizacao) % BUFFER_SIZE;
-            printf("Resto aqui: %d\n", resto);
             cont = blocos + 1;
             
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, aux->localizacao + ((cont - 1 - blocos)*BUFFER_SIZE), SEEK_SET);
+                    fseek(archive, novo->prox->localizacao + ((cont - 1 - blocos)*BUFFER_SIZE), SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, inicio + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive, novo->prox->localizacao + (cont - 1 - blocos)*BUFFER_SIZE - novo->tamanho, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
             if(blocos < 1 && resto != 0){
-                fseek(archive, -resto, SEEK_END);
+                fseek(archive, novo->prox->localizacao + ((cont - 1)*BUFFER_SIZE), SEEK_SET);
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, inicio + (cont-1)*BUFFER_SIZE, SEEK_SET);
+                fseek(archive, novo->prox->localizacao + (cont - 1)*BUFFER_SIZE, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
             truncate(nomeArc, d->inicio_diretorio);
-            insere_diretorio_apos_target(d, nomeArq, target);
+            insere_diretorio_apos_target(d, nomeArq, target); 
 
             return;
         }
@@ -641,8 +622,8 @@ void extrai_conteudo_arquivo(struct diretorio *d, char *arc, char *dest){
 
     aux = existe_arq(d, dest);
     if(aux == NULL){
-        printf("O arquivo %s não está no archive\n", dest);
-        return;
+        fprintf(stderr, "O arquivo %s não está no archive\n", dest);
+        exit (1);
     }
 
     strcpy(copia, dest);
@@ -650,7 +631,7 @@ void extrai_conteudo_arquivo(struct diretorio *d, char *arc, char *dest){
         dest = nome_diretorios(nome_arq, copia);
         
     }
-
+    /* A partir daqui é a extração do conteúdo */
     archive = abre_archive_leitura_escrita(arc);
     destino = abre_archive_leitura_escrita(dest);
 
@@ -681,18 +662,18 @@ void remove_conteudo(struct diretorio *d, char *arc, char *arq){
     FILE* archive = NULL;
 
     archive = abre_archive_leitura_escrita(arc);
-    if(archive == NULL)
-        return;
-    
+    if(archive == NULL){
+        fprintf(stderr, "O archive %s não pode ser aberto\n", arc);
+        exit (1);
+    }
+        
 
     aux = existe_arq(d, arq);
     if(aux == NULL){
-        printf("O arquivo %s não está no archive\n", arq);
-        return;
+        fprintf(stderr, "O arquivo %s não está no archive\n", arq);
+        exit (1);
     }
-        
-    
-        
+          
     truncate(arc, d->inicio_diretorio);
 
     if(aux == d->inicio && aux == d->fim){
@@ -799,18 +780,18 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
     aux = existe_arq(d, nomeArq);
     if(aux == NULL){
         insere_conteudo(d, nomeArq, nomeArc, func);
+        insere_diretorio(d, nomeArc);
         return;
     }
 
     tam_ant_arq = aux->tamanho;
     conteudo(aux, nomeArq);
     diferenca = aux->tamanho - tam_ant_arq;
-    printf("Dif: %d\n", diferenca);
 
     archive = abre_archive_leitura_escrita(nomeArc);
     if(archive == NULL){
-        printf("O archive %s não foi aberto corretamente\n", nomeArc);
-        return;
+        fprintf(stderr, "O archive %s não foi aberto corretamente\n", nomeArc);
+        exit (1);
     }
     
     fseek(archive, 0, SEEK_END);
@@ -843,7 +824,6 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
     else{
         /* Bloco para puxar o conteudo para em (diferença) posições*/
         blocos = (d->inicio_diretorio - ftell(archive)) / BUFFER_SIZE;
-        printf("BLOCOS: %d\n", blocos);
         resto = (d->inicio_diretorio - ftell(archive)) % BUFFER_SIZE;
         cont = blocos + 1;
         if(blocos >= 1)
@@ -866,7 +846,7 @@ void atualiza_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct
     arquivo = abre_archive_leitura(nomeArq);
 
     if(arquivo == NULL){
-        printf("O arquivo %s não existe\n", nomeArq);
+        fprintf(stderr, "O arquivo %s não existe\n", nomeArq);
         fclose(archive);
         fclose(arquivo);
         return;
