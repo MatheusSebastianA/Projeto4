@@ -121,7 +121,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
 
         d->inicio->tam_nome = strlen(nomeArq);
         d->inicio = conteudo(d->inicio, nomeArq);
-        if(nome_barra(nomeArq)){
+        if(nome_barra(nomeArq) == 1){
             char caminho[TAM_NOME];
             caminho[0] = '.';
             caminho[1] = '\0';
@@ -151,13 +151,13 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     strcpy(aux->prox->nomeArq, nomeArq);
     aux->prox->tam_nome = strlen(nomeArq);
     aux->prox = conteudo(aux->prox, nomeArq);
-    if(nome_barra(nomeArq)){
+    if(nome_barra(nomeArq) == 1){
         char caminho[TAM_NOME];
         caminho[0] = '.';
         caminho[1] = '\0';
-        strcat(caminho, aux->nomeArq);
+        strcat(caminho, aux->prox->nomeArq);
         aux->tam_nome++;    
-        strcpy(aux->nomeArq, caminho);
+        strcpy(aux->prox->nomeArq, caminho);
     }
     aux->prox->ordem = aux->ordem + 1;
     aux->prox->localizacao = aux->localizacao + aux->tamanho;
