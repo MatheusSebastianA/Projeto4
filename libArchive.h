@@ -23,9 +23,11 @@ int insere_bloco_conteudo(struct nodoM *nodo, FILE *arq, FILE *archive);
 
 int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
 
-void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc, struct nodoM* (* func) (struct nodoM *aux, char *nomeArq));
+void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *target,  char *nomeArc);
 
-void extrai_conteudo_arquivo(char *arc, char *dest);
+char* nome_diretorios(char nome[TAM_NOME], char *copia);
+
+void extrai_conteudo_arquivo(struct diretorio *d, char *arc, char *dest);
 
 void remove_conteudo(struct diretorio *d, char *arc, char *arq);
 
