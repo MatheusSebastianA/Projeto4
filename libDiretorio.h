@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define TAM_NOME 64
+#define TAM_NOME 129
 
 struct nodoM{
     char nomeArq[TAM_NOME];
@@ -33,6 +33,8 @@ struct diretorio* cria_diretorio();
 int compara_caractere(char c1, char c2);
 
 int compara_nome(char *s1, char *s2, int cont );
+
+int nome_barra(char *dest);
 
 struct nodoM* existe_arq(struct diretorio *d, char *nomeArq);
 
