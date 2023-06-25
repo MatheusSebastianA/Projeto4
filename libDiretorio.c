@@ -156,7 +156,7 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         caminho[0] = '.';
         caminho[1] = '\0';
         strcat(caminho, aux->prox->nomeArq);
-        aux->tam_nome++;    
+        aux->prox->tam_nome++;    
         strcpy(aux->prox->nomeArq, caminho);
     }
     aux->prox->ordem = aux->ordem + 1;
