@@ -160,10 +160,21 @@ int insere_conteudo(struct diretorio *d, char *nomeArq, char *nomeArc, struct no
     FILE *arq = NULL, *arc = NULL;
     struct nodoM *aux = NULL;
 
-    arq = abre_archive_leitura(nomeArq);
-    if(arq == NULL){
-        printf("O arquivo %s não existe\n", nomeArq);
-        return 1;
+    if(nome_barra(nomeArq) == 1){
+        arq = abre_archive_leitura(nomeArq);
+        if(arq == NULL){
+            printf("O arquivo %s não existe\n", nomeArq);
+            return 1;
+        }
+    }
+
+
+    else{
+        arq = abre_archive_leitura(nomeArq);
+        if(arq == NULL){
+            printf("O arquivo %s não existe\n", nomeArq);
+            return 1;
+        }
     }
     
     arc = abre_archive_leitura_escrita(nomeArc);   
@@ -590,8 +601,41 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
     return;
 }
 
+/*Função que pega os nomes dos diretorios que terão que ser criados na extração */
+char* nome_diretorios(char nome[TAM_NOME], char *copia){
+    int indice = 0;
+    char caminho[TAM_NOME];
+    caminho[0] = '\0';
+    for(int i = 0; i < strlen(copia); i++){
+        if (copia[i] == '/'){
+            int j = i + 1; 
+            indice = 0;
+            while(j < strlen(copia) && copia[j] != '\0' && copia[j] != '/'){
+                nome[indice] = copia[j];
+                indice++;
+                j++;
+            }
+            if(j + 1 < strlen(copia)){
+                nome[indice] = '/';
+                nome[indice+1] = '\0';
+                strcat(caminho, nome);
+                mkdir(caminho, 0777);
+            }
+            else{
+                nome[indice] = '\0';
+                strcat(caminho, nome);
+            }
+                
+        } 
+    }
+    strcpy(nome, caminho);
+    return nome;
+}
+
 /*Função que apenas extrai o conteudo de um arquivo e insere no arquivo de nome correspondete */
 void extrai_conteudo_arquivo(struct diretorio *d, char *arc, char *dest){
+    char copia[TAM_NOME+1];
+    char nome_arq[TAM_NOME];
     FILE *archive, *destino;
     struct nodoM *aux = NULL;
 
@@ -599,6 +643,12 @@ void extrai_conteudo_arquivo(struct diretorio *d, char *arc, char *dest){
     if(aux == NULL){
         printf("O arquivo %s não está no archive\n", dest);
         return;
+    }
+
+    strcpy(copia, dest);
+    if(nome_barra(copia)){
+        dest = nome_diretorios(nome_arq, copia);
+        
     }
 
     archive = abre_archive_leitura_escrita(arc);
