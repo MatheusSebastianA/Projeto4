@@ -118,7 +118,7 @@ struct nodoM* insereA(struct nodoM *nodo, char *nomeArq){
     compara = malloc(sizeof(struct stat));
     stat(nomeArq, compara);
 
-    if(compara->st_mtime <= nodo->data)
+    if(compara->st_mtime < nodo->data)
         nodo = conteudo(nodo, nomeArq);
 
     return nodo;
