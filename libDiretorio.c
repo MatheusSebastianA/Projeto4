@@ -40,13 +40,14 @@ int compara_nome(char *s1, char *s2, int cont){
         for(int i = 0; i < tamanho_s2; i++){
             if((compara_caractere(*(s1+i+1), *(s2+i))))
                 cont++;
+            
         }
     
     }
 
     else if(tamanho_s1 == tamanho_s2)
         for(int i = 0; i < tamanho_s1; i++){
-            if((*(s1+i) = *(s2+i))){
+            if(((compara_caractere(*(s1+i), *(s2+i))))){
                 cont++;
             }
                 
