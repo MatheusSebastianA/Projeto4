@@ -45,6 +45,15 @@ int compara_nome(char *s1, char *s2, int cont){
     return 0;
 }
 
+/*Função que apenas verifica se o nome tem barra, se tiver é porque é um diretorio */
+int nome_barra(char *dest){
+    for (int i = 0; dest[i] != '\0'; i++)
+        if (dest[i] == '/')
+            return 1;
+
+    return 0;
+}
+
 /*Função que verifica se o arquivo existe na estrutura de diretorios, se existir retorna ele se não retorna NULL */
 struct nodoM* existe_arq (struct diretorio *d, char *nomeArq){
     struct nodoM *aux = NULL;
@@ -109,8 +118,17 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
         if(!(d->inicio =  malloc(sizeof(struct nodoM))))
             return NULL;
         strcpy(d->inicio->nomeArq, nomeArq);
+
         d->inicio->tam_nome = strlen(nomeArq);
         d->inicio = conteudo(d->inicio, nomeArq);
+        if(nome_barra(nomeArq)){
+            char caminho[TAM_NOME];
+            caminho[0] = '.';
+            caminho[1] = '\0';
+            strcat(caminho, d->inicio->nomeArq);
+            d->inicio->tam_nome++;
+            strcpy(d->inicio->nomeArq, caminho);
+        }
         d->inicio->ordem = 0;
         d->inicio->localizacao = sizeof(long int);
         d->inicio_diretorio = d->inicio->localizacao + d->inicio->tamanho;
@@ -133,6 +151,14 @@ struct nodoM* insere(struct diretorio *d, char *nomeArq, struct nodoM* (* func) 
     strcpy(aux->prox->nomeArq, nomeArq);
     aux->prox->tam_nome = strlen(nomeArq);
     aux->prox = conteudo(aux->prox, nomeArq);
+    if(nome_barra(nomeArq)){
+        char caminho[TAM_NOME];
+        caminho[0] = '.';
+        caminho[1] = '\0';
+        strcat(caminho, aux->nomeArq);
+        aux->tam_nome++;    
+        strcpy(aux->nomeArq, caminho);
+    }
     aux->prox->ordem = aux->ordem + 1;
     aux->prox->localizacao = aux->localizacao + aux->tamanho;
     aux->prox->prox = NULL;
@@ -195,7 +221,12 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
             d->inicio = novo->prox;
             temp = aux->prox;
             anterior = d->inicio;
-            aux->prox = novo;
+            if(aux->prox != NULL)
+                aux->prox = novo;
+            else{
+                aux->prox = malloc(sizeof(struct nodoM));
+                aux->prox = novo;
+            }
             novo->prox = temp;
 
             int i = 0;
@@ -230,6 +261,12 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
             temp->prox = temp2;
             novo->ordem = aux->ordem + 1;
 
+            aux = d->inicio;
+            while(aux->prox != NULL){
+                aux->prox->localizacao = aux->localizacao + aux->tamanho; 
+                aux = aux->prox;
+            }
+
             return 0;
         }
 
@@ -250,6 +287,7 @@ int insere_diretorio_apos_target(struct diretorio *d, char *nomeArq, char *targe
             aux = d->inicio;
             while(aux->prox != NULL){
                 aux->ordem = i;
+                aux->prox->localizacao = aux->localizacao + aux->tamanho;
                 aux = aux->prox;
                 i++;
             }
