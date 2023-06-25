@@ -425,7 +425,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, novo->localizacao + novo->tamanho, SEEK_SET);
+                fseek(archive, inicio + novo->tamanho, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
 
@@ -436,9 +436,9 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
             cont = blocos + 1;
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, novo->localizacao + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive, novo->localizacao + novo->tamanho + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, inicio + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive, inicio + (cont-1-blocos)*BUFFER_SIZE, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
@@ -449,7 +449,7 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
                 }
                 fseek(archive, inicio + (cont-1)*BUFFER_SIZE, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
-            }
+            } 
 
             /*bloco para puxar o conteudo que ficava na frente do nodo que foi para o novo local*/
             int tam_depois = d->inicio_diretorio - novo->prox->localizacao;
@@ -459,40 +459,40 @@ void insere_conteudo_apos_target(struct diretorio *d, char *nomeArq, char *targe
 
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, aux->prox->localizacao + novo->tamanho + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive, novo->prox->localizacao + (cont-1-blocos)*BUFFER_SIZE, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, novo->localizacao + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive, novo->prox->localizacao + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
             if(blocos < 1 && resto != 0){
-                fseek(archive, aux->prox->localizacao + aux->prox->tamanho + novo->tamanho + (cont-1)*BUFFER_SIZE, SEEK_SET);
+                fseek(archive, novo->prox->localizacao + (cont-1)*BUFFER_SIZE, SEEK_SET);
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, aux->prox->localizacao + novo->tamanho + (cont - 1)*BUFFER_SIZE, SEEK_SET);
+                fseek(archive, novo->prox->localizacao + (cont - 1)*BUFFER_SIZE, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             } 
 
             /*bloco para puxar o conteudo que ficava antes do nodo que foi para o novo local*/
-            blocos = (novo->localizacao -  aux->prox->localizacao) / BUFFER_SIZE;
-            resto = (novo->localizacao - aux->prox->localizacao) % BUFFER_SIZE;
+            blocos = (d->inicio_diretorio - novo->prox->localizacao) / BUFFER_SIZE;
+            resto = (d->inicio_diretorio - novo->prox->localizacao) % BUFFER_SIZE;
             cont = blocos + 1;
 
             if(blocos >= 1)
                 for(blocos = blocos; blocos > 0; blocos--){
-                    fseek(archive, blocos*BUFFER_SIZE, SEEK_END);
+                    fseek(archive, novo->prox->localizacao + novo->tamanho + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
                     fread(buffer, sizeof(char), BUFFER_SIZE, archive);
-                    fseek(archive, aux->prox->localizacao + novo->tamanho + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
+                    fseek(archive,  novo->prox->localizacao + (cont - 1 - blocos)*BUFFER_SIZE, SEEK_SET);
                     fwrite(buffer, sizeof(char), BUFFER_SIZE, archive);
                 }
 
             if(blocos < 1 && resto != 0){
-                fseek(archive, novo->prox->localizacao + novo->tamanho + (cont - 1)*BUFFER_SIZE, SEEK_SET);
+                fseek(archive, -resto , SEEK_END);
                 for(i = 0; i < resto; i++){
                     fread(&buffer[i], sizeof(char), 1, archive);
                 }
-                fseek(archive, aux->prox->localizacao + tam_depois + novo->tamanho + (cont - 1)*BUFFER_SIZE, SEEK_SET);
+                fseek(archive,  novo->prox->localizacao, SEEK_SET);
                 fwrite(&buffer, sizeof(char), resto, archive);
             }
             
